@@ -1,0 +1,17 @@
+const COLORS = {
+  GRAY: "gray",
+  RED: "red",
+  PINK: "pink",
+  GRAPE: "grape",
+  VIOLET: "violet",
+  INDIGO: "indigo",
+  BLUE: "blue",
+  CYAN: "cyan",
+  TEAL: "teal",
+  GREEN: "green",
+  LIME: "lime",
+  YELLOW: "yellow",
+  ORANGE: "orange",
+};
+
+module.exports = COLORS;
