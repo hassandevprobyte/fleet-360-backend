@@ -32,6 +32,12 @@ exports.error = {
     notFound: "Fleet not found",
     licensePlateExists: "License plate already exists",
   },
+  insurance: {
+    notFound: "Insurance not found",
+  },
+  maintenance: {
+    notFound: "Maintenance not found",
+  },
   picklist: {
     notFound: "Picklist not found",
     titleExists: "Picklist title already exists",

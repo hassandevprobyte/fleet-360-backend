@@ -3,6 +3,15 @@ const asyncHandler = require("express-async-handler");
 // Services
 const fleetService = require("./fleet.service");
 
+// @desc    Get all fleets
+// @route   GET /api/v1/fleets/all
+// @access  Private
+exports.getAllFleets = asyncHandler(async (req, res) => {
+  const data = await fleetService.getAllFleets(req.filters);
+
+  res.status(200).json(data);
+});
+
 // @desc    Get fleets with pagination
 // @route   GET /api/v1/fleets
 // @access  Private
@@ -14,7 +23,16 @@ exports.getFleetsWithPagination = asyncHandler(async (req, res) => {
     sort: req.pagination.sort,
   };
 
-  const data = await fleetService.getVehiclesWithPagination(payload);
+  const data = await fleetService.getFleetsWithPagination(payload);
+
+  res.status(200).json(data);
+});
+
+// @desc    Get Fleet by id
+// @route   GET /api/v1/fleets/:id
+// @access  Private
+exports.getFleetById = asyncHandler(async (req, res) => {
+  const data = await fleetService.getFleetById(req.params.id);
 
   res.status(200).json(data);
 });
@@ -29,16 +47,7 @@ exports.getFleetsSummaryByGroup = asyncHandler(async (req, res) => {
     secondaryGroup: req.query.secondaryGroup,
   };
 
-  const data = await fleetService.getVehiclesSummaryByGroup(payload);
-
-  res.status(200).json(data);
-});
-
-// @desc    Get Fleet by id
-// @route   GET /api/v1/fleets/:id
-// @access  Private
-exports.getFleetById = asyncHandler(async (req, res) => {
-  const data = await fleetService.getVehicleById(req.params.id);
+  const data = await fleetService.getFleetsSummaryByGroup(payload);
 
   res.status(200).json(data);
 });
@@ -51,6 +60,9 @@ exports.createFleet = asyncHandler(async (req, res) => {
     make: req.body.make,
     model: req.body.model,
     year: req.body.year,
+    type: req.body.type,
+    fuelType: req.body.fuelType,
+    transmission: req.body.transmission,
     color: req.body.color,
     licensePlate: req.body.licensePlate,
     purchaseAmount: req.body.purchaseAmount,
@@ -58,17 +70,18 @@ exports.createFleet = asyncHandler(async (req, res) => {
     rent: req.body.rent,
     initialOdometer: req.body.initialOdometer,
     status: req.body.status,
+    condition: req.body.condition,
     company: req.body.company,
     assignedTo: req.body.assignedTo,
+    // assignedBy: req.user._id,
     assignedOn: req.body.assignedOn,
-    assignedBy: req.user._id,
     inspector: req.body.inspector,
-    createdBy: req.user._id,
+    // createdBy: req.user._id,
   };
 
-  const attachmentPayload = { files: req.files, uploadedBy: req.user._id };
+  const attachmentPayload = { files: req.files };
 
-  const data = await fleetService.createVehicle(vehiclePayload, attachmentPayload);
+  const data = await fleetService.createFleet(vehiclePayload, attachmentPayload);
 
   res.status(201).json(data);
 });
@@ -82,6 +95,9 @@ exports.updateFleet = asyncHandler(async (req, res) => {
     make: req.body.make,
     model: req.body.model,
     year: req.body.year,
+    type: req.body.type,
+    fuelType: req.body.fuelType,
+    transmission: req.body.transmission,
     color: req.body.color,
     licensePlate: req.body.licensePlate,
     purchaseAmount: req.body.purchaseAmount,
@@ -89,14 +105,15 @@ exports.updateFleet = asyncHandler(async (req, res) => {
     rent: req.body.rent,
     initialOdometer: req.body.initialOdometer,
     status: req.body.status,
+    condition: req.body.condition,
     company: req.body.company,
     assignedTo: req.body.assignedTo,
+    // assignedBy: req.user._id,
     assignedOn: req.body.assignedOn,
-    assignedBy: req.user._id,
     inspector: req.body.inspector,
   };
 
-  const data = await fleetService.updateVehicle(payload);
+  const data = await fleetService.updateFleet(payload);
 
   res.status(200).json(data);
 });
@@ -105,7 +122,7 @@ exports.updateFleet = asyncHandler(async (req, res) => {
 // @route   DELETE /api/v1/fleets/:id
 // @access  Private
 exports.deleteFleet = asyncHandler(async (req, res) => {
-  const data = await fleetService.deleteVehicle(req.params.id);
+  const data = await fleetService.deleteFleet(req.params.id);
 
   res.status(200).json(data);
 });

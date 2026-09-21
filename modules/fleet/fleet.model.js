@@ -1,26 +1,44 @@
 const mongoose = require("mongoose");
 
-const VehicleSchema = new mongoose.Schema(
+// Constants
+const MODELS = require("../../constants/MODELS");
+
+const schema = new mongoose.Schema(
   {
     make: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Picklist",
-      required: [true, "vehicle make is required"],
+      ref: MODELS.PICKLIST,
+      required: [true, "make is required"],
     },
     model: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Picklist",
-      required: [true, "vehicle model is required"],
+      ref: MODELS.PICKLIST,
+      required: [true, "model is required"],
     },
     year: {
       type: Number,
       required: [true, "year is required"],
     },
+    type: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: MODELS.PICKLIST,
+      required: [true, "type is required"],
+    },
+    fuelType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: MODELS.PICKLIST,
+      required: [true, "fuel type is required"],
+    },
+    transmission: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: MODELS.PICKLIST,
+      required: [true, "transmission is required"],
+    },
     color: {
       type: String,
       lowercase: true,
       trim: true,
-      required: [true, "vehicle color is required"],
+      required: [true, "color is required"],
     },
     licensePlate: {
       type: String,
@@ -51,36 +69,34 @@ const VehicleSchema = new mongoose.Schema(
     },
     status: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Picklist",
-      required: [true, "vehicle status is required"],
+      ref: MODELS.PICKLIST,
+      required: [true, "status is required"],
+    },
+    condition: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: MODELS.PICKLIST,
+      required: [true, "condition is required"],
     },
     company: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      required: [true, "company is required"],
     },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee",
     },
     assignedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
     },
     assignedOn: {
       type: Date,
     },
     inspector: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: [true, "createdBy is required"],
     },
   },
   { timestamps: true },
 );
 
-module.exports = mongoose.model("Vehicle", VehicleSchema);
+module.exports = mongoose.model(MODELS.FLEET, schema);

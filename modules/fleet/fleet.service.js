@@ -8,9 +8,7 @@ const fleetRepository = require("./fleet.repository");
 const joi = require("../../config");
 const joiSchema = require("./fleet.schema");
 const fleetValidation = require("./fleet.validation");
-const companyValidation = require("../company/company.validation");
 const picklistValidation = require("../picklist/picklist.validation");
-const userValidation = require("../user/user.validation");
 
 // Helpers
 const attachmentHelpers = require("../attachment/attachment.helper");
@@ -24,170 +22,217 @@ const isValidObjectId = require("../../utils/isValidObjectId");
 const MODELS = require("../../constants/MODELS");
 
 exports.getAllFleets = async (filters) => {
-  return fleetRepository.getAllVehicles(filters);
+  return fleetRepository.getAllFleets(filters);
 };
 
 exports.getFleetsWithPagination = async (payload) => {
   const { filters, page, pageSize, sort } = payload;
   const offset = (page - 1) * pageSize;
 
-  const [vehicles, totalCount] = await Promise.all([fleetRepository.getVehiclesWithPagination(filters, offset, pageSize, sort), fleetRepository.getVehiclesCount(filters)]);
-  const transformedVehicles = await attachmentHelpers.attachAttachmentsToDocuments(vehicles);
+  const [fleets, totalCount] = await Promise.all([fleetRepository.getFleetsWithPagination(filters, offset, pageSize, sort), fleetRepository.getFleetsCount(filters)]);
+  const transformedFleets = await attachmentHelpers.attachAttachmentsToDocuments(fleets);
 
   const meta = { totalCount, totalPages: Math.ceil(totalCount / pageSize), page, pageSize };
 
-  return { data: transformedVehicles, meta };
+  return { data: transformedFleets, meta };
+};
+
+exports.getFleetById = async (fleetId) => {
+  joi.validate(fleetId, joiSchema.getFleetById);
+
+  const fleet = await fleetValidation.throwErrorIfFleetDoesNotExist(fleetId);
+
+  return attachmentHelpers.attachAttachmentsToDocuments(fleet);
 };
 
 exports.getFleetsSummaryByGroup = async (payload) => {
   const { filters, primaryGroup, secondaryGroup } = joi.validate(payload, joiSchema.getFleetsSummaryByGroup);
 
-  const vehiclesSummary = await fleetRepository.getVehiclesSummaryByGroup(filters, primaryGroup, secondaryGroup);
+  const fleetsSummary = await fleetRepository.getFleetsSummaryByGroup(filters, primaryGroup, secondaryGroup);
 
-  return transformVehiclesSummaryByGroup(vehiclesSummary, primaryGroup, secondaryGroup);
+  return transformFleetsSummaryByGroup(fleetsSummary, primaryGroup, secondaryGroup);
 };
 
-exports.getVehicleById = async (vehicleId) => {
-  joi.validate(vehicleId, joiSchema.getVehicleById);
-
-  const vehicle = await fleetValidation.throwErrorIfVehicleDoesNotExist(vehicleId);
-
-  return attachmentHelpers.attachAttachmentsToDocuments(vehicle);
-};
-
-exports.createVehicle = async (payload, attachmentPayload) => {
-  const validatedPayload = joi.validate(payload, joiSchema.createVehicle);
+exports.createFleet = async (payload, attachmentPayload) => {
+  const validatedPayload = joi.validate(payload, joiSchema.createFleet);
 
   validatedPayload.currentOdometer = validatedPayload.initialOdometer;
 
-  await fleetValidation.throwErrorIfVehicleLicensePlateExists(validatedPayload.licensePlate);
+  await fleetValidation.throwErrorIfFleetLicensePlateExists(validatedPayload.licensePlate);
   await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.make);
   await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.model);
+  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.type);
+  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.fuelType);
+  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.transmission);
   await picklistValidation.throwErrorIfPicklistDoesNotExistInParentPicklist(validatedPayload.model, validatedPayload.make);
-  await companyValidation.throwErrorIfCompanyDoesNotExist(validatedPayload.company);
 
   if (validatedPayload.status) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
   } else {
-    const status = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.VEHICLE, "status");
+    const status = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.FLEET, "status");
 
     validatedPayload.status = status._id;
   }
 
-  if (validatedPayload.inspector) {
-    await userValidation.throwErrorIfUserDoesNotExist(validatedPayload.inspector);
+  if (validatedPayload.condition) {
+    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.condition);
+  } else {
+    const condition = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.FLEET, "condition");
+
+    validatedPayload.condition = condition._id;
   }
 
-  const vehicle = await fleetRepository.createVehicle(validatedPayload);
+  const fleet = await fleetRepository.createFleet(validatedPayload);
 
   if (attachmentPayload?.files?.length) {
     await attachmentService.addAttachments({
-      resource: MODELS.VEHICLE,
-      resourceId: vehicle._id,
+      resource: MODELS.FLEET,
+      resourceId: fleet._id,
       files: attachmentPayload.files,
       uploadedBy: attachmentPayload.uploadedBy,
     });
   }
 
-  return vehicle;
+  return fleet;
 };
 
-exports.updateVehicle = async (payload) => {
-  const validatedPayload = joi.validate(payload, joiSchema.updateVehicle);
+exports.updateFleet = async (payload) => {
+  const validatedPayload = joi.validate(payload, joiSchema.updateFleet);
 
-  const existingVehicle = await fleetValidation.throwErrorIfVehicleDoesNotExist(validatedPayload.id);
+  const existingFleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.id);
 
   const updatePayload = {};
 
-  if (validatedPayload.make && validatedPayload.make !== existingVehicle.make._id.toString()) {
+  if (validatedPayload.make && validatedPayload.make !== String(existingFleet?.make._id)) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.make);
 
     updatePayload.make = validatedPayload.make;
   }
 
-  if (validatedPayload.model && validatedPayload.model !== existingVehicle.model._id.toString()) {
+  if (validatedPayload.model && validatedPayload.model !== String(existingFleet?.model._id)) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.model);
 
     updatePayload.model = validatedPayload.model;
   }
 
   if (updatePayload.make || updatePayload.model) {
-    const updatedModel = validatedPayload.model || existingVehicle.model._id.toString();
-    const updatedMake = validatedPayload.make || existingVehicle.make._id.toString();
+    const updatedModel = validatedPayload.model || String(existingFleet?.model._id);
+    const updatedMake = validatedPayload.make || String(existingFleet?.make._id);
 
     await picklistValidation.throwErrorIfPicklistDoesNotExistInParentPicklist(updatedModel, updatedMake);
   }
 
-  if (validatedPayload.status && validatedPayload.status !== existingVehicle.status._id.toString()) {
+  if (validatedPayload.year && validatedPayload.year !== existingFleet.year) {
+    updatePayload.year = validatedPayload.year;
+  }
+
+  if (validatedPayload.type && validatedPayload.type !== String(existingFleet?.type._id)) {
+    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.type);
+
+    updatePayload.type = validatedPayload.type;
+  }
+
+  if (validatedPayload.fuelType && validatedPayload.fuelType !== String(existingFleet?.fuelType._id)) {
+    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.fuelType);
+
+    updatePayload.fuelType = validatedPayload.fuelType;
+  }
+
+  if (validatedPayload.transmission && validatedPayload.transmission !== String(existingFleet?.transmission._id)) {
+    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.transmission);
+
+    updatePayload.transmission = validatedPayload.transmission;
+  }
+
+  if (validatedPayload.status && validatedPayload.status !== String(existingFleet?.status._id)) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
 
     updatePayload.status = validatedPayload.status;
   }
 
-  if (validatedPayload.year && validatedPayload.year !== existingVehicle.year) {
-    updatePayload.year = validatedPayload.year;
+  if (validatedPayload.condition && validatedPayload.condition !== String(existingFleet?.condition._id)) {
+    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.condition);
+
+    updatePayload.condition = validatedPayload.condition;
   }
 
-  if (validatedPayload.color && validatedPayload.color !== existingVehicle.color) {
+  if (validatedPayload.color && validatedPayload.color !== existingFleet.color) {
     updatePayload.color = validatedPayload.color;
   }
 
-  if (validatedPayload.licensePlate && validatedPayload.licensePlate !== existingVehicle.licensePlate) {
-    await fleetValidation.throwErrorIfVehicleLicensePlateExists(validatedPayload.licensePlate);
+  if (validatedPayload.licensePlate && validatedPayload.licensePlate !== existingFleet.licensePlate) {
+    await fleetValidation.throwErrorIfFleetLicensePlateExists(validatedPayload.licensePlate);
 
     updatePayload.licensePlate = validatedPayload.licensePlate;
   }
 
-  if (validatedPayload.purchaseAmount && validatedPayload.purchaseAmount !== existingVehicle.purchaseAmount) {
+  if (validatedPayload.purchaseAmount && validatedPayload.purchaseAmount !== existingFleet.purchaseAmount) {
     updatePayload.purchaseAmount = validatedPayload.purchaseAmount;
   }
 
-  if (validatedPayload.purchaseDate && !isSameDay(validatedPayload.purchaseDate, existingVehicle.purchaseDate)) {
+  if (validatedPayload.purchaseDate && !isSameDay(validatedPayload.purchaseDate, existingFleet.purchaseDate)) {
     updatePayload.purchaseDate = validatedPayload.purchaseDate;
   }
 
-  if (validatedPayload.rent && validatedPayload.rent !== existingVehicle.rent) {
+  if (validatedPayload.rent && validatedPayload.rent !== existingFleet.rent) {
     updatePayload.rent = validatedPayload.rent;
   }
 
-  if (validatedPayload.company && validatedPayload.company !== existingVehicle?.company?._id?.toString()) {
-    await companyValidation.throwErrorIfCompanyDoesNotExist(validatedPayload.company);
+  if (validatedPayload.initialOdometer && validatedPayload.initialOdometer !== existingFleet.initialOdometer) {
+    updatePayload.initialOdometer = validatedPayload.initialOdometer;
+    if (existingFleet.initialOdometer === existingFleet.currentOdometer) {
+      updatePayload.currentOdometer = validatedPayload.initialOdometer;
+    }
+  }
 
+  if (validatedPayload.currentOdometer && validatedPayload.currentOdometer !== existingFleet.currentOdometer) {
+    updatePayload.currentOdometer = validatedPayload.currentOdometer;
+  }
+
+  if (validatedPayload.company && validatedPayload.company !== String(existingFleet?.company)) {
     updatePayload.company = validatedPayload.company;
   }
 
-  if (validatedPayload.assignedOn && !isSameDay(validatedPayload.assignedOn, existingVehicle.assignedOn)) {
+  if ((validatedPayload.assignedTo && validatedPayload.assignedTo, String(existingFleet?.assignedTo))) {
+    updatePayload.assignedTo = validatedPayload.assignedTo;
+  }
+
+  if ((validatedPayload.assignedBy && validatedPayload.assignedBy, String(existingFleet?.assignedBy))) {
+    updatePayload.assignedBy = validatedPayload.assignedBy;
+  }
+
+  if (validatedPayload.assignedOn && !isSameDay(validatedPayload.assignedOn, existingFleet?.assignedOn)) {
     updatePayload.assignedOn = validatedPayload.assignedOn;
   }
 
-  if (validatedPayload.inspector && validatedPayload.inspector !== existingVehicle?.inspector?._id.toString()) {
-    await userValidation.throwErrorIfUserDoesNotExist(validatedPayload.inspector);
-
+  if (validatedPayload.inspector && validatedPayload.inspector !== String(existingFleet?.inspector)) {
     updatePayload.inspector = validatedPayload.inspector;
   }
 
-  return fleetRepository.updateVehicleById(validatedPayload.id, updatePayload);
+  if (!Object.keys(updatePayload).length) return existingFleet;
+
+  return fleetRepository.updateFleetById(validatedPayload.id, updatePayload);
 };
 
-exports.deleteVehicle = async (vehicleId) => {
-  joi.validate(vehicleId, joiSchema.getVehicleById);
+exports.deleteFleet = async (fleetId) => {
+  joi.validate(fleetId, joiSchema.getFleetById);
 
-  await fleetValidation.throwErrorIfVehicleDoesNotExist(vehicleId);
+  await fleetValidation.throwErrorIfFleetDoesNotExist(fleetId);
 
-  await attachmentService.deleteAttachmentsByResource(MODELS.VEHICLE, vehicleId);
-  await fleetRepository.deleteVehicleById(vehicleId);
+  await attachmentService.deleteAttachmentsByResource(MODELS.FLEET, fleetId);
+  await fleetRepository.deleteFleetById(fleetId);
 
-  return { deletedId: vehicleId };
+  return { deletedId: fleetId };
 };
 
-async function transformVehiclesSummaryByGroup(vehiclesSummary, primaryGroup, secondaryGroup) {
-  const primaryGroupIds = vehiclesSummary.primaryGroupWise
+async function transformFleetsSummaryByGroup(fleetsSummary, primaryGroup, secondaryGroup) {
+  const primaryGroupIds = fleetsSummary.primaryGroupWise
     .map((group) => group?._id)
     .filter((id) => id && isValidObjectId(id))
     .map(String);
   const primaryFilters = { _id: { $in: primaryGroupIds } };
 
-  const secondaryGroupIds = vehiclesSummary.secondaryGroupWise
+  const secondaryGroupIds = fleetsSummary.secondaryGroupWise
     .map((group) => group?._id)
     .filter((id) => id && isValidObjectId(id))
     .map(String);
@@ -231,8 +276,8 @@ async function transformVehiclesSummaryByGroup(vehiclesSummary, primaryGroup, se
       .sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
   };
 
-  const primaryGroupWise = transformPrimaryGroupWise(vehiclesSummary.primaryGroupWise);
-  const secondaryGroupWise = transformSecondaryGroupWise(vehiclesSummary.secondaryGroupWise);
+  const primaryGroupWise = transformPrimaryGroupWise(fleetsSummary.primaryGroupWise);
+  const secondaryGroupWise = transformSecondaryGroupWise(fleetsSummary.secondaryGroupWise);
 
-  return { ...vehiclesSummary, primaryGroupWise, secondaryGroupWise };
+  return { ...fleetsSummary, primaryGroupWise, secondaryGroupWise };
 }

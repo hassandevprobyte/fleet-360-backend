@@ -1,6 +1,6 @@
 const Fleet = require("./fleet.model");
 
-const POPULATION_PIPELINE = [{ path: "make" }, { path: "model" }, { path: "status" }, { path: "company" }, { path: "assignedTo" }, { path: "inspector" }];
+const POPULATION_PIPELINE = [{ path: "make" }, { path: "model" }, { path: "type" }, { path: "fuelType" }, { path: "transmission" }, { path: "status" }, { path: "condition" }];
 
 exports.getAllFleets = async (filters) => {
   return Fleet.find(filters).sort({ createdAt: -1 }).populate(POPULATION_PIPELINE).lean();
