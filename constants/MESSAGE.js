@@ -28,6 +28,10 @@ exports.error = {
     acronymExists: "Company acronym already exists",
     assignedOnUser: "Company is assigned on user",
   },
+  depreciation: {
+    notFound: "Depreciation not found",
+    titleExists: "Depreciation already exists",
+  },
   fleet: {
     notFound: "Fleet not found",
     licensePlateExists: "License plate already exists",
