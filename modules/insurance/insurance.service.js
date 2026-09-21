@@ -49,11 +49,6 @@ exports.createInsurance = async (payload, attachmentPayload) => {
 
   await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
   await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.provider);
-  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.type);
-
-  if (validatedPayload.broker) {
-    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.broker);
-  }
 
   if (validatedPayload.status) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
@@ -61,10 +56,6 @@ exports.createInsurance = async (payload, attachmentPayload) => {
     const status = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.MAINTENANCE, "status");
 
     validatedPayload.status = status._id;
-  }
-
-  if (validatedPayload.coverages?.length) {
-    await Promise.all(validatedPayload.coverages.map((coverage) => picklistValidation.throwErrorIfPicklistDoesNotExist(coverage.type)));
   }
 
   const insurance = await insuranceRepository.createInsurance(validatedPayload);
@@ -101,23 +92,12 @@ exports.updateInsurance = async (payload) => {
     updatePayload.provider = validatedPayload.provider;
   }
 
-  if (validatedPayload.type && validatedPayload.type !== String(existingInsurance?.type?._id)) {
-    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.type);
-    updatePayload.type = validatedPayload.type;
-  }
-
-  if (validatedPayload.broker && validatedPayload.broker !== String(existingInsurance?.broker?._id)) {
-    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.broker);
-
-    updatePayload.broker = validatedPayload.broker;
-  }
-
   if (validatedPayload.status && validatedPayload.status !== String(existingInsurance?.status?._id)) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
     updatePayload.status = validatedPayload.status;
   }
 
-  const updatedStartDate = validatedPayload.startedDate || existingTaxation?.startedDate;
+  const updatedStartDate = validatedPayload.startDate || existingTaxation?.startDate;
   const updatedEndDate = validatedPayload.endDate || existingTaxation?.endDate;
   isValidDateRange(updatedStartDate, updatedEndDate);
 
@@ -137,30 +117,12 @@ exports.updateInsurance = async (payload) => {
     updatePayload.cancellationReason = validatedPayload.cancellationReason;
   }
 
-  if (validatedPayload.totalPremium && validatedPayload.totalPremium !== existingInsurance?.totalPremium) {
-    updatePayload.totalPremium = validatedPayload.totalPremium;
+  if (validatedPayload.premium && validatedPayload.premium !== existingInsurance?.premium) {
+    updatePayload.premium = validatedPayload.premium;
   }
 
-  if (validatedPayload.taxAmount && validatedPayload.taxAmount !== existingInsurance?.taxAmount) {
-    updatePayload.taxAmount = validatedPayload.taxAmount;
-  }
-
-  if (validatedPayload.discountAmount && validatedPayload.discountAmount !== existingInsurance?.discountAmount) {
-    updatePayload.discountAmount = validatedPayload.discountAmount;
-  }
-
-  if (validatedPayload.totalAmount && validatedPayload.totalAmount !== existingInsurance?.totalAmount) {
-    updatePayload.totalAmount = validatedPayload.totalAmount;
-  }
-
-  if (validatedPayload.deductible && validatedPayload.deductible !== existingInsurance?.deductible) {
-    updatePayload.deductible = validatedPayload.deductible;
-  }
-
-  if (validatedPayload.coverages && !lodash.isEqual(validatedPayload.coverages, existingInsurance?.coverages)) {
-    await Promise.all(validatedPayload.coverages.map((coverage) => picklistValidation.throwErrorIfPicklistDoesNotExist(coverage.type)));
-
-    updatePayload.coverages = validatedPayload.coverages;
+  if (validatedPayload.coverage && validatedPayload.coverage !== existingInsurance?.coverage) {
+    updatePayload.coverage = validatedPayload.coverage;
   }
 
   if (validatedPayload.notes && validatedPayload.notes !== existingInsurance?.notes) {

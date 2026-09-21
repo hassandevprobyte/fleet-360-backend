@@ -13,10 +13,10 @@ const schema = new mongoose.Schema(
       ref: MODELS.FLEET,
       required: [true, "fleet is required"],
     },
-    taxChallanNumber: {
+    challanNumber: {
       type: String,
       trim: true,
-      required: [true, "tax challan number is required"],
+      required: [true, "challan number is required"],
     },
     jurisdiction: {
       type: mongoose.Schema.Types.ObjectId,

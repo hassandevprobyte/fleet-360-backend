@@ -1,6 +1,6 @@
 const Taxation = require("./taxation.model");
 
-const POPULATION_PIPELINE = [{ path: "fleet" }];
+const POPULATION_PIPELINE = [{ path: "fleet" }, { path: "jurisdiction" }, { path: "status" }];
 
 exports.getAllTaxation = async (filters) => {
   return Taxation.find(filters).sort({ createdAt: -1 }).populate(POPULATION_PIPELINE).lean();

@@ -146,15 +146,15 @@ exports.updateMaintenance = async (payload) => {
     updatePayload.provider = validatedPayload.provider;
   }
 
-  if (validatedPayload.startedDate && validatedPayload.startedDate !== existingMaintenance?.startedDate) {
-    updatePayload.startedDate = validatedPayload.startedDate;
+  if (validatedPayload.startDate && validatedPayload.startDate !== existingMaintenance?.startDate) {
+    updatePayload.startDate = validatedPayload.startDate;
   }
 
   if (validatedPayload.endDate && validatedPayload.endDate !== existingMaintenance?.endDate) {
     updatePayload.endDate = validatedPayload.endDate;
   }
 
-  const updatedStartDate = validatedPayload.startedDate || existingMaintenance?.startedDate;
+  const updatedStartDate = validatedPayload.startDate || existingMaintenance?.startDate;
   const updatedEndDate = validatedPayload.endDate || existingMaintenance?.endDate;
   isValidDateRange(updatedStartDate, updatedEndDate);
 

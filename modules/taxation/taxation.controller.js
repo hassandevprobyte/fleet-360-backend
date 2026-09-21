@@ -44,7 +44,7 @@ exports.createTaxation = asyncHandler(async (req, res) => {
   const taxationPayload = {
     company: req.body.company,
     fleet: req.body.fleet,
-    taxChallanNumber: req.body.taxChallanNumber,
+    challanNumber: req.body.challanNumber,
     jurisdiction: req.body.jurisdiction,
     status: req.body.status,
     startDate: req.body.startDate,
@@ -70,7 +70,7 @@ exports.updateTaxation = asyncHandler(async (req, res) => {
     id: req.params.id,
     company: req.body.company,
     fleet: req.body.fleet,
-    taxChallanNumber: req.body.taxChallanNumber,
+    challanNumber: req.body.challanNumber,
     jurisdiction: req.body.jurisdiction,
     status: req.body.status,
     startDate: req.body.startDate,

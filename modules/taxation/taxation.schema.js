@@ -7,7 +7,7 @@ exports.getTaxationById = objectId.required();
 exports.baseSchema = Joi.object({
   company: objectId,
   fleet: objectId,
-  taxChallanNumber: Joi.string().trim().required(),
+  challanNumber: Joi.string().trim(),
   jurisdiction: objectId,
   status: objectId,
   startDate: Joi.date(),
@@ -18,7 +18,7 @@ exports.baseSchema = Joi.object({
   createdBy: objectId,
 });
 
-exports.createTaxation = exports.baseSchema.fork(["fleet", "taxChallanNumber", "status", "startDate", "endDate", "taxAmount"], (schema) => schema.required());
+exports.createTaxation = exports.baseSchema.fork(["fleet", "challanNumber", "status", "startDate", "endDate", "taxAmount"], (schema) => schema.required());
 
 exports.updateTaxation = exports.baseSchema
   .append({

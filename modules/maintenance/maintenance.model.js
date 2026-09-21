@@ -83,7 +83,7 @@ const schema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: MODELS.PICKLIST,
     },
-    startedDate: {
+    startDate: {
       type: Date,
     },
     endDate: {

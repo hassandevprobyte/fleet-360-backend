@@ -3,27 +3,6 @@ const mongoose = require("mongoose");
 // Constants
 const MODELS = require("../../constants/MODELS");
 
-const coverageSchema = {
-  type: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: MODELS.PICKLIST,
-    required: [true, "type is required"],
-  },
-  limit: {
-    type: Number,
-    min: 0,
-  },
-  deductible: {
-    type: Number,
-    min: 0,
-  },
-  premium: {
-    type: Number,
-    min: 0,
-  },
-  _id: false,
-};
-
 const schema = new mongoose.Schema(
   {
     company: {
@@ -45,15 +24,6 @@ const schema = new mongoose.Schema(
       ref: MODELS.PICKLIST,
       required: [true, "provider is required"],
     },
-    type: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: MODELS.PICKLIST,
-      required: [true, "type is required"],
-    },
-    broker: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: MODELS.PICKLIST,
-    },
     status: {
       type: mongoose.Schema.Types.ObjectId,
       ref: MODELS.PICKLIST,
@@ -74,29 +44,16 @@ const schema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    totalPremium: {
+    premium: {
       type: Number,
       min: 0,
+      required: [true, "end date is required"],
     },
-    taxAmount: {
+    coverage: {
       type: Number,
       min: 0,
-      default: 0,
+      required: [true, "end date is required"],
     },
-    discountAmount: {
-      type: Number,
-      min: 0,
-      default: 0,
-    },
-    totalAmount: {
-      type: Number,
-      min: 0,
-    },
-    deductible: {
-      type: Number,
-      min: 0,
-    },
-    coverages: [coverageSchema],
     notes: {
       type: String,
       trim: true,

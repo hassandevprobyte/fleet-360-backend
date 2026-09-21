@@ -39,7 +39,7 @@ exports.createTaxation = async (payload, attachmentPayload) => {
   const validatedPayload = joi.validate(payload, joiSchema.createTaxation);
   isValidDateRange(validatedPayload.startDate, validatedPayload.endDate);
 
-  await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleetId);
+  await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
 
   if (validatedPayload.jurisdiction) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.jurisdiction);
@@ -83,8 +83,8 @@ exports.updateTaxation = async (payload) => {
     updatePayload.fleet = validatedPayload.fleet;
   }
 
-  if (validatedPayload.taxChallanNumber && validatedPayload.taxChallanNumber !== existingTaxation?.taxChallanNumber) {
-    updatePayload.taxChallanNumber = validatedPayload.taxChallanNumber;
+  if (validatedPayload.challanNumber && validatedPayload.challanNumber !== existingTaxation?.challanNumber) {
+    updatePayload.challanNumber = validatedPayload.challanNumber;
   }
 
   if (validatedPayload.jurisdiction && validatedPayload.jurisdiction !== String(existingTaxation?.jurisdiction._id)) {
@@ -99,12 +99,12 @@ exports.updateTaxation = async (payload) => {
     updatePayload.status = validatedPayload.status;
   }
 
-  const updatedStartDate = validatedPayload.startedDate || existingTaxation?.startedDate;
+  const updatedStartDate = validatedPayload.startDate || existingTaxation?.startDate;
   const updatedEndDate = validatedPayload.endDate || existingTaxation?.endDate;
   isValidDateRange(updatedStartDate, updatedEndDate);
 
-  if (validatedPayload.startedDate && !isSameDay(validatedPayload.startedDate, existingTaxation?.startedDate)) {
-    updatePayload.startedDate = validatedPayload.startedDate;
+  if (validatedPayload.startDate && !isSameDay(validatedPayload.startDate, existingTaxation?.startDate)) {
+    updatePayload.startDate = validatedPayload.startDate;
   }
 
   if (validatedPayload.endDate && !isSameDay(validatedPayload.endDate, existingTaxation?.endDate)) {
