@@ -117,8 +117,8 @@ exports.updateInsurance = async (payload) => {
     updatePayload.status = validatedPayload.status;
   }
 
-  const updatedStartDate = validatedPayload.startDate ? validatedPayload.startDate : existingInsurance?.startDate;
-  const updatedEndDate = validatedPayload.endDate ? validatedPayload.endDate : existingInsurance?.endDate;
+  const updatedStartDate = validatedPayload.startedDate || existingTaxation?.startedDate;
+  const updatedEndDate = validatedPayload.endDate || existingTaxation?.endDate;
   isValidDateRange(updatedStartDate, updatedEndDate);
 
   if (validatedPayload.startDate && !isSameDay(validatedPayload.startDate, existingInsurance?.startDate)) {

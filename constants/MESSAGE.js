@@ -54,6 +54,9 @@ exports.error = {
     titleExists: "Role title already exists",
     assignedOnUser: "Role is assigned on user",
   },
+  taxation: {
+    notFound: "Taxation not found",
+  },
   user: {
     notFound: "User not found",
     notFoundInBrand: "User not found in brand",

@@ -15,6 +15,7 @@ const routes = [
   { path: "/insurance", resource: MODELS.FLEET, route: require("./insurance/insurance.route") },
   { path: "/maintenance", resource: MODELS.MAINTENANCE, route: require("./maintenance/maintenance.route") },
   { path: "/picklists", resource: MODELS.PICKLIST, route: require("./picklist/picklist.route") },
+  { path: "/taxation", resource: MODELS.PICKLIST, route: require("./taxation/taxation.route") },
   { path: "/roles", resource: MODELS.ROLE, route: require("./role/role.route") },
 ];
 
