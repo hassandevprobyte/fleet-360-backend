@@ -47,12 +47,12 @@ const schema = new mongoose.Schema(
     premium: {
       type: Number,
       min: 0,
-      required: [true, "end date is required"],
+      required: [true, "premium is required"],
     },
     coverage: {
       type: Number,
       min: 0,
-      required: [true, "end date is required"],
+      required: [true, "coverage is required"],
     },
     notes: {
       type: String,

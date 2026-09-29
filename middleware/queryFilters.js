@@ -2,11 +2,7 @@
 const scopeQueryBuilder = require("../utils/scopeQueryBuilder");
 const transformQueryParams = require("../utils/transformQueryToMongooseSyntax");
 
-const orFilters = {
-  leadInfo: (value) => [{ title: { $regex: value, $options: "i" } }, { email: { $regex: value, $options: "i" } }, { phone: { $regex: value, $options: "i" } }],
-  clientInfo: (value) => [{ title: { $regex: value, $options: "i" } }, { email: { $regex: value, $options: "i" } }, { phone: { $regex: value, $options: "i" } }],
-  keyword: (value) => [{ title: { $regex: value, $options: "i" } }, { content: { $regex: value, $options: "i" } }],
-};
+const orFilters = {};
 
 const queryFilters = (modelName, extraFields = []) => {
   return (req, res, next) => {
@@ -14,14 +10,10 @@ const queryFilters = (modelName, extraFields = []) => {
       return next();
     }
 
-    const queryScope = scopeQueryBuilder(modelName, req.user);
+    // const queryScope = scopeQueryBuilder(modelName, req.user);
+    const queryScope = {};
 
-    const filters = transformQueryParams(
-      modelName,
-      { ...queryScope, ...(req.query.query || {}) },
-      ["$or", "leadInfo", "clientInfo", "orderInfo", "keyword", ...extraFields],
-      ["$or", "leadInfo", "clientInfo", "orderInfo", "keyword", "resource", "field"],
-    );
+    const filters = transformQueryParams(modelName, { ...queryScope, ...(req.query.query || {}) }, ["$or", ...extraFields], ["$or", "resource", "field"]);
 
     const andConditions = [];
 

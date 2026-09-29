@@ -25,7 +25,7 @@ routes.forEach((route) => {
 
   if (route.resource) {
     // middlewares.push(checkPermissions(route.resource));
-    // middlewares.push(queryFilters(route.resource));
+    middlewares.push(queryFilters(route.resource));
   }
 
   router.use(route.path, ...middlewares, route.route);

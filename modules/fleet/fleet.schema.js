@@ -33,3 +33,9 @@ exports.createFleet = exports.baseSchema.fork(
 );
 
 exports.updateFleet = exports.baseSchema.append({ id: objectId.required() }).fork("createdBy", (schema) => schema.strip());
+
+exports.getFleetsSummaryByGroup = Joi.object({
+  filters: Joi.object().default({}).optional(),
+  primaryGroup: Joi.string().trim().valid("make", "model", "type", "fuelType", "transmission", "status", "condition").default("make").optional(),
+  secondaryGroup: Joi.string().trim().valid("make", "model", "type", "fuelType", "transmission", "status", "condition").default("model").optional(),
+});
