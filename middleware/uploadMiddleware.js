@@ -4,6 +4,12 @@ const crypto = require("crypto");
 const fs = require("fs");
 const Boom = require("@hapi/boom");
 
+const MIME_GROUPS = {
+  IMAGES: ["image/jpeg", "image/png", "image/webp"],
+  VIDEOS: ["video/mp4", "video/quicktime", "video/webm", "video/3gpp"], // quicktime = iPhone .mov
+  DOCUMENTS: ["application/pdf", "text/csv"],
+};
+
 /**
  * @param {Object} options
  * @param {string|function} options.destination - folder path string or function(req, file) => path
@@ -16,7 +22,7 @@ const uploadMiddleware = ({
   destination,
   uploadType = "single",
   field,
-  allowedMimeTypes = ["image/jpeg", "image/png", "application/pdf", "text/csv"],
+  allowedMimeTypes = [...MIME_GROUPS.IMAGES, ...MIME_GROUPS.DOCUMENTS, ...MIME_GROUPS.VIDEOS],
   maxFileSize = 5 * 1024 * 1024,
 }) => {
   if (!destination) throw Boom.badImplementation("Upload destination is required");

@@ -1,6 +1,9 @@
 const Joi = require("joi");
 const { objectId } = require("../../config");
 
+// Constants
+const ENUMS = require("../../constants/ENUMS");
+
 exports.getFleetById = objectId.required();
 
 exports.baseSchema = Joi.object({
@@ -17,7 +20,9 @@ exports.baseSchema = Joi.object({
   rent: Joi.number().positive(),
   initialOdometer: Joi.number().positive(),
   currentOdometer: Joi.number().positive(),
-  status: objectId,
+  status: Joi.string()
+    .valid(...Object.values(ENUMS.FLEET.STATUSES))
+    .default(ENUMS.FLEET.STATUSES.IN_HOUSE),
   condition: objectId,
   company: objectId,
   assignedTo: objectId,

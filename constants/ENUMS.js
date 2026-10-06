@@ -1,4 +1,17 @@
 const ENUMS = {
+  FLEET: {
+    STATUSES: {
+      ASSIGNED: "assigned",
+      IN_MAINTENANCE: "in_maintenance",
+      IN_HOUSE: "in_house",
+    },
+  },
+  MAINTENANCE: {
+    STATUSES: {
+      INITIATED: "initiated",
+      COMPLETED: "completed",
+    },
+  },
   DEPRECIATION: {
     METHODS: {
       STRAIGHT_LINE: {

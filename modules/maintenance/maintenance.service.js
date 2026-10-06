@@ -46,17 +46,10 @@ exports.getMaintenanceById = async (maintenanceId) => {
 exports.createMaintenance = async (payload, attachmentPayload) => {
   const validatedPayload = joi.validate(payload, joiSchema.createMaintenance);
 
-  await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
+  const fleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
+  validatedPayload.company = fleet.company;
   await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.type);
-  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.provider);
-
-  if (validatedPayload.status) {
-    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
-  } else {
-    const status = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.MAINTENANCE, "status");
-
-    validatedPayload.status = status._id;
-  }
+  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.vendor);
 
   if (validatedPayload.priority) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.priority);
@@ -66,20 +59,9 @@ exports.createMaintenance = async (payload, attachmentPayload) => {
     validatedPayload.priority = priority._id;
   }
 
-  if (validatedPayload.components?.length) {
-    await Promise.all(validatedPayload.components.map((component) => picklistValidation.throwErrorIfPicklistDoesNotExist(component.component)));
-  }
-
   if (validatedPayload.checklist?.length) {
     for (const c of validatedPayload.checklist) {
       await picklistValidation.throwErrorIfPicklistDoesNotExist(c.item);
-
-      if (c.status) {
-        await picklistValidation.throwErrorIfPicklistDoesNotExist(c.status);
-      } else {
-        const status = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.MAINTENANCE, "checklist.status");
-        c.status = status._id;
-      }
 
       if (c.condition) {
         await picklistValidation.throwErrorIfPicklistDoesNotExist(c.condition);
@@ -92,19 +74,35 @@ exports.createMaintenance = async (payload, attachmentPayload) => {
 
   const maintenance = await maintenanceRepository.createMaintenance(validatedPayload);
 
-  if (attachmentPayload?.files?.length) {
+  const updatePayload = {};
+  if (attachmentPayload?.conditionBefore?.length) {
     await attachmentService.addAttachments({
       resource: MODELS.MAINTENANCE,
       resourceId: maintenance._id,
-      files: attachmentPayload.files,
+      files: attachmentPayload.conditionBefore,
       uploadedBy: attachmentPayload.uploadedBy,
     });
+
+    updatePayload.conditionBefore = attachmentPayload.conditionBefore.map((file) => file.path);
   }
 
-  return maintenance;
+  if (attachmentPayload?.conditionAfter?.length) {
+    await attachmentService.addAttachments({
+      resource: MODELS.MAINTENANCE,
+      resourceId: maintenance._id,
+      files: attachmentPayload.conditionAfter,
+      uploadedBy: attachmentPayload.uploadedBy,
+    });
+
+    updatePayload.conditionAfter = attachmentPayload.conditionAfter.map((file) => file.path);
+  }
+
+  if (!Object.keys(updatePayload).length) return maintenance;
+
+  return maintenanceRepository.updateMaintenanceById(maintenance._id, updatePayload);
 };
 
-exports.updateMaintenance = async (payload) => {
+exports.updateMaintenance = async (payload, attachmentPayload) => {
   const validatedPayload = joi.validate(payload, joiSchema.updateMaintenance);
 
   const existingMaintenance = await maintenanceValidation.throwErrorIfMaintenanceDoesNotExist(validatedPayload.id);
@@ -128,22 +126,14 @@ exports.updateMaintenance = async (payload) => {
     updatePayload.priority = validatedPayload.priority;
   }
 
-  if (validatedPayload.reportedBy && validatedPayload.reportedBy !== String(existingMaintenance?.reportedBy)) {
-    updatePayload.reportedBy = validatedPayload.reportedBy;
+  if (validatedPayload.vendor && validatedPayload.vendor !== String(existingMaintenance?.vendor._id)) {
+    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.vendor);
+
+    updatePayload.vendor = validatedPayload.vendor;
   }
 
-  if (validatedPayload.assignedTo && validatedPayload.assignedTo !== String(existingMaintenance?.assignedTo)) {
-    updatePayload.assignedTo = validatedPayload.assignedTo;
-  }
-
-  if (validatedPayload.assignedOn && validatedPayload.assignedOn !== String(existingMaintenance?.assignedOn)) {
-    updatePayload.assignedOn = validatedPayload.assignedOn;
-  }
-
-  if (validatedPayload.provider && validatedPayload.provider !== String(existingMaintenance?.provider._id)) {
-    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.provider);
-
-    updatePayload.provider = validatedPayload.provider;
+  if (validatedPayload.status && validatedPayload.status !== existingMaintenance?.status) {
+    updatePayload.status = validatedPayload.status;
   }
 
   if (validatedPayload.startDate && validatedPayload.startDate !== existingMaintenance?.startDate) {
@@ -170,22 +160,9 @@ exports.updateMaintenance = async (payload) => {
     updatePayload.notes = validatedPayload.notes;
   }
 
-  if (validatedPayload.components && !lodash.isEqual(validatedPayload.components, existingMaintenance?.components)) {
-    await Promise.all(validatedPayload.components.map((component) => picklistValidation.throwErrorIfPicklistDoesNotExist(component.component)));
-
-    updatePayload.components = validatedPayload.components;
-  }
-
   if (validatedPayload.checklist && !lodash.isEqual(validatedPayload.checklist, existingMaintenance?.checklist)) {
     for (const c of validatedPayload.checklist) {
       await picklistValidation.throwErrorIfPicklistDoesNotExist(c.item);
-
-      if (c.status) {
-        await picklistValidation.throwErrorIfPicklistDoesNotExist(c.status);
-      } else {
-        const status = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.MAINTENANCE, "checklist.status");
-        c.status = status._id;
-      }
 
       if (c.condition) {
         await picklistValidation.throwErrorIfPicklistDoesNotExist(c.condition);
@@ -196,6 +173,28 @@ exports.updateMaintenance = async (payload) => {
     }
 
     updatePayload.checklist = validatedPayload.checklist;
+  }
+
+  if (attachmentPayload?.conditionBefore?.length) {
+    await attachmentService.addAttachments({
+      resource: MODELS.MAINTENANCE,
+      resourceId: existingMaintenance._id,
+      files: attachmentPayload.conditionBefore,
+      uploadedBy: attachmentPayload.uploadedBy,
+    });
+
+    updatePayload.conditionBefore = attachmentPayload.conditionBefore.map((file) => file.path);
+  }
+
+  if (attachmentPayload?.conditionAfter?.length) {
+    await attachmentService.addAttachments({
+      resource: MODELS.MAINTENANCE,
+      resourceId: existingMaintenance._id,
+      files: attachmentPayload.conditionAfter,
+      uploadedBy: attachmentPayload.uploadedBy,
+    });
+
+    updatePayload.conditionAfter = attachmentPayload.conditionAfter.map((file) => file.path);
   }
 
   if (!Object.keys(updatePayload).length) return existingMaintenance;
@@ -214,7 +213,7 @@ exports.deleteMaintenance = async (maintenanceId) => {
   joi.validate(maintenanceId, joiSchema.getMaintenanceById);
 
   await maintenanceValidation.throwErrorIfMaintenanceDoesNotExist(maintenanceId);
-
+  await attachmentService.deleteAttachmentsByResource(MODELS.MAINTENANCE, maintenanceId);
   await maintenanceRepository.deleteMaintenanceById(maintenanceId);
 
   return { deletedId: maintenanceId };

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 // Constants
 const MODELS = require("../../constants/MODELS");
+const ENUMS = require("../../constants/ENUMS");
 
 const schema = new mongoose.Schema(
   {
@@ -68,9 +69,9 @@ const schema = new mongoose.Schema(
       default: 0,
     },
     status: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: MODELS.PICKLIST,
-      required: [true, "status is required"],
+      type: String,
+      enum: Object.values(ENUMS.FLEET.STATUSES),
+      default: ENUMS.FLEET.STATUSES.IN_HOUSE,
     },
     condition: {
       type: mongoose.Schema.Types.ObjectId,
@@ -94,6 +95,12 @@ const schema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
+    },
+    images: {
+      type: [String],
+    },
+    documents: {
+      type: [String],
     },
   },
   { timestamps: true },

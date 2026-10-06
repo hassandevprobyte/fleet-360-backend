@@ -5,11 +5,9 @@ const POPULATION_PIPELINE = [
   { path: "type" },
   { path: "status" },
   { path: "priority" },
-  { path: "provider" },
+  { path: "vendor" },
   { path: "checklist", populate: { path: "item" } },
-  { path: "checklist", populate: { path: "status" } },
   { path: "checklist", populate: { path: "condition" } },
-  { path: "components", populate: { path: "component" } },
 ];
 
 exports.getAllMaintenance = async (filters) => {

@@ -79,7 +79,11 @@ exports.createFleet = asyncHandler(async (req, res) => {
     // createdBy: req.user._id,
   };
 
-  const attachmentPayload = { files: req.files };
+  const attachmentPayload = {
+    documents: req.files.documents,
+    images: req.files.images,
+    // uploadedBy: req.user._id,
+  };
 
   const data = await fleetService.createFleet(vehiclePayload, attachmentPayload);
 
@@ -113,7 +117,13 @@ exports.updateFleet = asyncHandler(async (req, res) => {
     inspector: req.body.inspector,
   };
 
-  const data = await fleetService.updateFleet(payload);
+  const attachmentPayload = {
+    documents: req.files.documents,
+    images: req.files.images,
+    // uploadedBy: req.user._id,
+  };
+
+  const data = await fleetService.updateFleet(payload, attachmentPayload);
 
   res.status(200).json(data);
 });

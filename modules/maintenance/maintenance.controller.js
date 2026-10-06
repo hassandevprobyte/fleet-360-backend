@@ -42,26 +42,26 @@ exports.getMaintenanceById = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createMaintenance = asyncHandler(async (req, res) => {
   const maintenancePayload = {
-    company: req.body.company,
     fleet: req.body.fleet,
     type: req.body.type,
     status: req.body.status,
     priority: req.body.priority,
-    reportedBy: req.body.reportedBy,
-    assignedTo: req.body.assignedTo,
-    assignedOn: req.body.assignedOn,
-    provider: req.body.provider,
+    vendor: req.body.vendor,
+    status: req.body.status,
     startDate: req.body.startDate,
     endDate: req.body.endDate,
     odometer: req.body.odometer,
     cost: req.body.cost,
-    components: req.body.components,
     checklist: req.body.checklist,
     notes: req.body.notes,
     // createdBy: req.user._id,
   };
 
-  const attachmentPayload = { files: req.files };
+  const attachmentPayload = {
+    conditionBefore: req.files.conditionBefore,
+    conditionAfter: req.files.conditionAfter,
+    // uploadedBy: req.user._id
+  };
 
   const data = await maintenanceService.createMaintenance(maintenancePayload, attachmentPayload);
 
@@ -72,27 +72,29 @@ exports.createMaintenance = asyncHandler(async (req, res) => {
 // @route   PATCH /api/v1/maintenance/:id
 // @access  Private
 exports.updateMaintenance = asyncHandler(async (req, res) => {
-  const payload = {
+  const maintenancePayload = {
     id: req.params.id,
-    company: req.body.company,
     fleet: req.body.fleet,
     type: req.body.type,
     status: req.body.status,
     priority: req.body.priority,
-    reportedBy: req.body.reportedBy,
-    assignedTo: req.body.assignedTo,
-    assignedOn: req.body.assignedOn,
-    provider: req.body.provider,
+    vendor: req.body.vendor,
+    status: req.body.status,
     startDate: req.body.startDate,
     endDate: req.body.endDate,
     odometer: req.body.odometer,
     cost: req.body.cost,
-    components: req.body.components,
     checklist: req.body.checklist,
     notes: req.body.notes,
   };
 
-  const data = await maintenanceService.updateMaintenance(payload);
+  const attachmentPayload = {
+    conditionBefore: req.files.conditionBefore,
+    conditionAfter: req.files.conditionAfter,
+    // uploadedBy: req.user._id
+  };
+
+  const data = await maintenanceService.updateMaintenance(maintenancePayload, attachmentPayload);
 
   res.status(200).json(data);
 });

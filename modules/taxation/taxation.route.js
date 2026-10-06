@@ -8,12 +8,12 @@ const taxationController = require("./taxation.controller");
 const uploadMiddleware = require("../../middleware/uploadMiddleware");
 const upload = uploadMiddleware({
   destination: "public/uploads/taxation",
-  uploadType: "array",
-  field: "files",
+  uploadType: "fields",
+  field: [{ name: "documents", maxCount: 10 }],
 });
 
 router.route("/").get(taxationController.getTaxationWithPagination).post(upload, taxationController.createTaxation);
 router.route("/all").get(taxationController.getAllTaxation);
-router.route("/:id").get(taxationController.getTaxationById).patch(taxationController.updateTaxation).delete(taxationController.deleteTaxation);
+router.route("/:id").get(taxationController.getTaxationById).patch(upload, taxationController.updateTaxation).delete(taxationController.deleteTaxation);
 
 module.exports = router;

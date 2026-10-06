@@ -71,7 +71,7 @@ exports.createFleet = async (payload) => {
 };
 
 exports.updateFleetById = async (fleetId, payload) => {
-  return Fleet.findByIdAndUpdate(fleetId, payload);
+  return Fleet.findByIdAndUpdate(fleetId, payload, { returnDocument: "after" });
 };
 
 exports.deleteFleetById = async (fleetId) => {

@@ -1,3 +1,6 @@
+// Services
+const attachmentService = require("../attachment/attachment.service");
+
 // Repositories
 const taxationRepository = require("./taxation.repository");
 
@@ -14,6 +17,9 @@ const MODELS = require("../../constants/MODELS");
 // Utilities
 const isValidDateRange = require("../../utils/isValidDateRange");
 const isSameDay = require("../../utils/isSameDay");
+
+const startOfYear = (year) => new Date(Date.UTC(year, 0, 1));
+const endOfYear = (year) => new Date(Date.UTC(year, 11, 31));
 
 exports.getAllTaxation = async (filters) => {
   return taxationRepository.getAllTaxation(filters);
@@ -39,19 +45,15 @@ exports.createTaxation = async (payload, attachmentPayload) => {
   const validatedPayload = joi.validate(payload, joiSchema.createTaxation);
   isValidDateRange(validatedPayload.startDate, validatedPayload.endDate);
 
-  await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
+  const fleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
+  validatedPayload.company = fleet.company;
 
   if (validatedPayload.jurisdiction) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.jurisdiction);
   }
 
-  if (validatedPayload.status) {
-    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
-  } else {
-    const status = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.TAXATION, "status");
-
-    validatedPayload.status = status._id;
-  }
+  validatedPayload.startDate = startOfYear(validatedPayload.startDate);
+  validatedPayload.endDate = endOfYear(validatedPayload.endDate);
 
   if (validatedPayload.filingDate) {
     isValidDateRange(validatedPayload.filingDate);
@@ -59,19 +61,25 @@ exports.createTaxation = async (payload, attachmentPayload) => {
 
   const taxation = await taxationRepository.createTaxation(validatedPayload);
 
-  if (attachmentPayload?.files?.length) {
+  const updatePayload = {};
+
+  if (attachmentPayload?.documents?.length) {
     await attachmentService.addAttachments({
       resource: MODELS.TAXATION,
       resourceId: taxation._id,
-      files: attachmentPayload.files,
+      files: attachmentPayload.documents,
       uploadedBy: attachmentPayload.uploadedBy,
     });
+
+    updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
   }
 
-  return taxation;
+  if (!Object.keys(updatePayload).length) return taxation;
+
+  return taxationRepository.updateTaxationById(taxation._id, updatePayload);
 };
 
-exports.updateTaxation = async (payload) => {
+exports.updateTaxation = async (payload, attachmentPayload) => {
   const validatedPayload = joi.validate(payload, joiSchema.updateTaxation);
 
   const existingTaxation = await taxationValidation.throwErrorIfTaxationDoesNotExist(validatedPayload.id);
@@ -93,34 +101,39 @@ exports.updateTaxation = async (payload) => {
     updatePayload.jurisdiction = validatedPayload.jurisdiction;
   }
 
-  if (validatedPayload.status && validatedPayload.status !== String(existingTaxation?.status._id)) {
-    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
-
-    updatePayload.status = validatedPayload.status;
-  }
-
-  const updatedStartDate = validatedPayload.startDate || existingTaxation?.startDate;
-  const updatedEndDate = validatedPayload.endDate || existingTaxation?.endDate;
+  const updatedStartDate = startOfYear(validatedPayload.startDate) || existingTaxation?.startDate;
+  const updatedEndDate = endOfYear(validatedPayload.endDate) || existingTaxation?.endDate;
   isValidDateRange(updatedStartDate, updatedEndDate);
 
   if (validatedPayload.startDate && !isSameDay(validatedPayload.startDate, existingTaxation?.startDate)) {
-    updatePayload.startDate = validatedPayload.startDate;
+    updatePayload.startDate = startOfYear(validatedPayload.startDate);
   }
 
   if (validatedPayload.endDate && !isSameDay(validatedPayload.endDate, existingTaxation?.endDate)) {
-    updatePayload.endDate = validatedPayload.endDate;
+    updatePayload.endDate = endOfYear(validatedPayload.endDate);
   }
 
   if (validatedPayload.filingDate && !isSameDay(validatedPayload.filingDate, existingTaxation?.filingDate)) {
     updatePayload.filingDate = validatedPayload.filingDate;
   }
 
-  if (validatedPayload.taxAmount && validatedPayload.taxAmount !== existingTaxation?.taxAmount) {
-    updatePayload.taxAmount = validatedPayload.taxAmount;
+  if (validatedPayload.amount && validatedPayload.amount !== existingTaxation?.amount) {
+    updatePayload.amount = validatedPayload.amount;
   }
 
   if (validatedPayload.notes && validatedPayload.notes !== existingTaxation?.notes) {
     updatePayload.notes = validatedPayload.notes;
+  }
+
+  if (attachmentPayload?.documents?.length) {
+    await attachmentService.addAttachments({
+      resource: MODELS.TAXATION,
+      resourceId: existingTaxation._id,
+      files: attachmentPayload.documents,
+      uploadedBy: attachmentPayload.uploadedBy,
+    });
+
+    updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
   }
 
   if (!Object.keys(updatePayload).length) return existingTaxation;
@@ -132,7 +145,7 @@ exports.deleteTaxation = async (taxationId) => {
   joi.validate(taxationId, joiSchema.getTaxationById);
 
   await taxationValidation.throwErrorIfTaxationDoesNotExist(taxationId);
-
+  await attachmentService.deleteAttachmentsByResource(MODELS.TAXATION, taxationId);
   await taxationRepository.deleteTaxationById(taxationId);
 
   return { deletedId: taxationId };

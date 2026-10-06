@@ -5,20 +5,18 @@ const { objectId } = require("../../config");
 exports.getTaxationById = objectId.required();
 
 exports.baseSchema = Joi.object({
-  company: objectId,
   fleet: objectId,
   challanNumber: Joi.string().trim(),
   jurisdiction: objectId,
-  status: objectId,
-  startDate: Joi.date(),
-  endDate: Joi.date().greater(Joi.ref("startDate")),
+  startDate: Joi.number().positive().min(1000).max(9999),
+  endDate: Joi.number().positive().min(1000).max(9999),
   filingDate: Joi.date(),
-  taxAmount: Joi.number().min(0).default(0),
+  amount: Joi.number().min(0).default(0),
   notes: Joi.string().trim().empty(""),
   createdBy: objectId,
 });
 
-exports.createTaxation = exports.baseSchema.fork(["fleet", "challanNumber", "status", "startDate", "endDate", "taxAmount"], (schema) => schema.required());
+exports.createTaxation = exports.baseSchema.fork(["fleet", "challanNumber", "startDate", "endDate", "amount"], (schema) => schema.required());
 
 exports.updateTaxation = exports.baseSchema
   .append({

@@ -42,20 +42,21 @@ exports.getTaxationById = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createTaxation = asyncHandler(async (req, res) => {
   const taxationPayload = {
-    company: req.body.company,
     fleet: req.body.fleet,
     challanNumber: req.body.challanNumber,
     jurisdiction: req.body.jurisdiction,
-    status: req.body.status,
     startDate: req.body.startDate,
     endDate: req.body.endDate,
     filingDate: req.body.filingDate,
-    taxAmount: req.body.taxAmount,
+    amount: req.body.amount,
     notes: req.body.notes,
     // createdBy: req.user._id,
   };
 
-  const attachmentPayload = { files: req.files };
+  const attachmentPayload = {
+    documents: req.files.documents,
+    // uploadedBy: req.user._id,
+  };
 
   const data = await taxationService.createTaxation(taxationPayload, attachmentPayload);
 
@@ -68,19 +69,22 @@ exports.createTaxation = asyncHandler(async (req, res) => {
 exports.updateTaxation = asyncHandler(async (req, res) => {
   const payload = {
     id: req.params.id,
-    company: req.body.company,
     fleet: req.body.fleet,
     challanNumber: req.body.challanNumber,
     jurisdiction: req.body.jurisdiction,
-    status: req.body.status,
     startDate: req.body.startDate,
     endDate: req.body.endDate,
     filingDate: req.body.filingDate,
-    taxAmount: req.body.taxAmount,
+    amount: req.body.amount,
     notes: req.body.notes,
   };
 
-  const data = await taxationService.updateTaxation(payload);
+  const attachmentPayload = {
+    documents: req.files.documents,
+    // uploadedBy: req.user._id,
+  };
+
+  const data = await taxationService.updateTaxation(payload, attachmentPayload);
 
   res.status(200).json(data);
 });

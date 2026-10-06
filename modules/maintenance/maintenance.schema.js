@@ -1,38 +1,30 @@
 const Joi = require("joi");
-
 const { objectId } = require("../../config");
 
+// Constants
+const ENUMS = require("../../constants/ENUMS");
+
 exports.getMaintenanceById = objectId.required();
-
-const componentSchema = Joi.object({
-  component: objectId.required(),
-  quantity: Joi.number().min(1).default(1).required(),
-  unitCost: Joi.number().min(0).required(),
-  totalCost: Joi.number().min(0).required(),
-});
-
-const checklistItemSchema = Joi.object({
-  item: objectId.required(),
-  status: objectId.required(),
-  condition: objectId,
-});
 
 exports.baseSchema = Joi.object({
   company: objectId,
   fleet: objectId,
   type: objectId,
-  status: objectId,
   priority: objectId,
-  reportedBy: objectId,
-  assignedTo: objectId,
-  assignedOn: Joi.date(),
-  provider: objectId,
+  vendor: objectId,
+  status: Joi.string()
+    .valid(...Object.values(ENUMS.MAINTENANCE.STATUSES))
+    .default(ENUMS.MAINTENANCE.STATUSES.INITIATED),
   startDate: Joi.date(),
   endDate: Joi.date().greater(Joi.ref("startDate")),
   odometer: Joi.number().min(0),
   cost: Joi.number().min(0),
-  components: Joi.array().items(componentSchema),
-  checklist: Joi.array().items(checklistItemSchema),
+  checklist: Joi.array().items(
+    Joi.object({
+      item: objectId.required(),
+      condition: objectId,
+    }),
+  ),
   notes: Joi.string().trim().lowercase(),
   createdBy: objectId,
 });

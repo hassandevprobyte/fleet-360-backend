@@ -2,41 +2,13 @@ const mongoose = require("mongoose");
 
 // Constants
 const MODELS = require("../../constants/MODELS");
-
-const componentSchema = {
-  component: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: MODELS.PICKLIST,
-    required: [true, "component is required"],
-  },
-  quantity: {
-    type: Number,
-    default: 1,
-    min: 1,
-    required: [true, "quantity is required"],
-  },
-  unitCost: {
-    type: Number,
-    min: 0,
-    required: [true, "unit cost is required"],
-  },
-  totalCost: {
-    type: Number,
-    min: 0,
-    required: [true, "total cost is required"],
-  },
-  _id: false,
-};
+const ENUMS = require("../../constants/ENUMS");
 
 const checklistItemSchema = {
   item: {
     type: mongoose.Schema.Types.ObjectId,
     ref: MODELS.PICKLIST,
     required: [true, "item is required"],
-  },
-  status: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: MODELS.PICKLIST,
   },
   condition: {
     type: mongoose.Schema.Types.ObjectId,
@@ -62,26 +34,18 @@ const schema = new mongoose.Schema(
       ref: MODELS.PICKLIST,
       required: [true, "type is required"],
     },
-    status: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: MODELS.PICKLIST,
-    },
     priority: {
       type: mongoose.Schema.Types.ObjectId,
       ref: MODELS.PICKLIST,
     },
-    reportedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
-    assignedTo: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
-    assignedOn: {
-      type: Date,
-    },
-    provider: {
+    vendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: MODELS.PICKLIST,
+    },
+    status: {
+      type: String,
+      enum: Object.values(ENUMS.MAINTENANCE.STATUSES),
+      default: ENUMS.MAINTENANCE.STATUSES.INITIATED,
     },
     startDate: {
       type: Date,
@@ -98,7 +62,6 @@ const schema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
-    components: [componentSchema],
     checklist: [checklistItemSchema],
     notes: {
       type: String,
@@ -107,6 +70,12 @@ const schema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
+    },
+    conditionBefore: {
+      type: [String],
+    },
+    conditionAfter: {
+      type: [String],
     },
   },
   {

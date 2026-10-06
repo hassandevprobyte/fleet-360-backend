@@ -22,11 +22,6 @@ const schema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: MODELS.PICKLIST,
     },
-    status: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: MODELS.PICKLIST,
-      required: [true, "status is required"],
-    },
     startDate: {
       type: Date,
       required: [true, "start date is required"],
@@ -38,7 +33,7 @@ const schema = new mongoose.Schema(
     filingDate: {
       type: Date,
     },
-    taxAmount: {
+    amount: {
       type: Number,
       min: 0,
       default: 0,
@@ -49,6 +44,9 @@ const schema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
+    },
+    documents: {
+      type: [String],
     },
   },
   {

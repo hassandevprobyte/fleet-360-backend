@@ -30,11 +30,11 @@ exports.getFleetsWithPagination = async (payload) => {
   const offset = (page - 1) * pageSize;
 
   const [fleets, totalCount] = await Promise.all([fleetRepository.getFleetsWithPagination(filters, offset, pageSize, sort), fleetRepository.getFleetsCount(filters)]);
-  const transformedFleets = await attachmentHelpers.attachAttachmentsToDocuments(fleets);
+  // const transformedFleets = await attachmentHelpers.attachAttachmentsToDocuments(fleets);
 
   const meta = { totalCount, totalPages: Math.ceil(totalCount / pageSize), page, pageSize };
 
-  return { data: transformedFleets, meta };
+  return { data: fleets, meta };
 };
 
 exports.getFleetById = async (fleetId) => {
@@ -58,21 +58,16 @@ exports.createFleet = async (payload, attachmentPayload) => {
 
   validatedPayload.currentOdometer = validatedPayload.initialOdometer;
 
-  await fleetValidation.throwErrorIfFleetLicensePlateExists(validatedPayload.licensePlate);
-  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.make);
-  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.model);
-  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.type);
-  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.fuelType);
-  await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.transmission);
+  await Promise.all([
+    fleetValidation.throwErrorIfFleetLicensePlateExists(validatedPayload.licensePlate),
+    picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.make),
+    picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.model),
+    picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.type),
+    picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.fuelType),
+    picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.transmission),
+  ]);
+
   await picklistValidation.throwErrorIfPicklistDoesNotExistInParentPicklist(validatedPayload.model, validatedPayload.make);
-
-  if (validatedPayload.status) {
-    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
-  } else {
-    const status = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.FLEET, "status");
-
-    validatedPayload.status = status._id;
-  }
 
   if (validatedPayload.condition) {
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.condition);
@@ -84,19 +79,35 @@ exports.createFleet = async (payload, attachmentPayload) => {
 
   const fleet = await fleetRepository.createFleet(validatedPayload);
 
-  if (attachmentPayload?.files?.length) {
+  const updatePayload = {};
+  if (attachmentPayload?.documents?.length) {
     await attachmentService.addAttachments({
       resource: MODELS.FLEET,
       resourceId: fleet._id,
-      files: attachmentPayload.files,
+      files: attachmentPayload.documents,
       uploadedBy: attachmentPayload.uploadedBy,
     });
+
+    updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
   }
 
-  return fleet;
+  if (attachmentPayload?.images?.length) {
+    await attachmentService.addAttachments({
+      resource: MODELS.FLEET,
+      resourceId: fleet._id,
+      files: attachmentPayload.images,
+      uploadedBy: attachmentPayload.uploadedBy,
+    });
+
+    updatePayload.images = attachmentPayload.images.map((image) => image.path);
+  }
+
+  if (!Object.keys(updatePayload).length) return fleet;
+
+  return fleetRepository.updateFleetById(fleet._id, updatePayload);
 };
 
-exports.updateFleet = async (payload) => {
+exports.updateFleet = async (payload, attachmentPayload) => {
   const validatedPayload = joi.validate(payload, joiSchema.updateFleet);
 
   const existingFleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.id);
@@ -144,9 +155,7 @@ exports.updateFleet = async (payload) => {
     updatePayload.transmission = validatedPayload.transmission;
   }
 
-  if (validatedPayload.status && validatedPayload.status !== String(existingFleet?.status._id)) {
-    await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
-
+  if (validatedPayload.status && validatedPayload.status !== existingFleet?.status) {
     updatePayload.status = validatedPayload.status;
   }
 
@@ -209,6 +218,28 @@ exports.updateFleet = async (payload) => {
     updatePayload.inspector = validatedPayload.inspector;
   }
 
+  if (attachmentPayload?.documents?.length) {
+    await attachmentService.addAttachments({
+      resource: MODELS.FLEET,
+      resourceId: fleet._id,
+      files: attachmentPayload.documents,
+      uploadedBy: attachmentPayload.uploadedBy,
+    });
+
+    updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
+  }
+
+  if (attachmentPayload?.images?.length) {
+    await attachmentService.addAttachments({
+      resource: MODELS.FLEET,
+      resourceId: fleet._id,
+      files: attachmentPayload.images,
+      uploadedBy: attachmentPayload.uploadedBy,
+    });
+
+    updatePayload.images = attachmentPayload.images.map((image) => image.path);
+  }
+
   if (!Object.keys(updatePayload).length) return existingFleet;
 
   return fleetRepository.updateFleetById(validatedPayload.id, updatePayload);
@@ -218,7 +249,6 @@ exports.deleteFleet = async (fleetId) => {
   joi.validate(fleetId, joiSchema.getFleetById);
 
   await fleetValidation.throwErrorIfFleetDoesNotExist(fleetId);
-
   await attachmentService.deleteAttachmentsByResource(MODELS.FLEET, fleetId);
   await fleetRepository.deleteFleetById(fleetId);
 
