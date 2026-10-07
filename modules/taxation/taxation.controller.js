@@ -54,7 +54,7 @@ exports.createTaxation = asyncHandler(async (req, res) => {
   };
 
   const attachmentPayload = {
-    documents: req.files.documents,
+    documents: req.files?.documents,
     // uploadedBy: req.user._id,
   };
 
@@ -80,7 +80,7 @@ exports.updateTaxation = asyncHandler(async (req, res) => {
   };
 
   const attachmentPayload = {
-    documents: req.files.documents,
+    documents: req.files?.documents,
     // uploadedBy: req.user._id,
   };
 

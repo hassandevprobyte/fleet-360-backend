@@ -4,9 +4,8 @@ const { objectId } = require("../../config");
 exports.getInsuranceById = objectId.required();
 
 exports.baseSchema = Joi.object({
-  company: objectId,
   fleet: objectId,
-  policyNumber: Joi.string().trim().required(),
+  policyNumber: Joi.string().trim(),
   provider: objectId,
   status: objectId,
   startDate: Joi.date(),

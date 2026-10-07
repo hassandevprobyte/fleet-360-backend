@@ -56,7 +56,7 @@ exports.getFleetsSummaryByGroup = asyncHandler(async (req, res) => {
 // @route   POST /api/v1/fleets
 // @access  Private
 exports.createFleet = asyncHandler(async (req, res) => {
-  const vehiclePayload = {
+  const fleetPayload = {
     make: req.body.make,
     model: req.body.model,
     year: req.body.year,
@@ -72,7 +72,7 @@ exports.createFleet = asyncHandler(async (req, res) => {
     status: req.body.status,
     condition: req.body.condition,
     company: req.body.company,
-    assignedTo: req.body.assignedTo,
+    driverDetails: req.body.driverDetails,
     // assignedBy: req.user._id,
     assignedOn: req.body.assignedOn,
     inspector: req.body.inspector,
@@ -80,12 +80,12 @@ exports.createFleet = asyncHandler(async (req, res) => {
   };
 
   const attachmentPayload = {
-    documents: req.files.documents,
-    images: req.files.images,
+    documents: req.files?.documents,
+    images: req.files?.images,
     // uploadedBy: req.user._id,
   };
 
-  const data = await fleetService.createFleet(vehiclePayload, attachmentPayload);
+  const data = await fleetService.createFleet(fleetPayload, attachmentPayload);
 
   res.status(201).json(data);
 });
@@ -111,17 +111,19 @@ exports.updateFleet = asyncHandler(async (req, res) => {
     status: req.body.status,
     condition: req.body.condition,
     company: req.body.company,
-    assignedTo: req.body.assignedTo,
+    driverDetails: req.body.driverDetails,
     // assignedBy: req.user._id,
     assignedOn: req.body.assignedOn,
     inspector: req.body.inspector,
   };
 
   const attachmentPayload = {
-    documents: req.files.documents,
-    images: req.files.images,
+    documents: req.files?.documents,
+    images: req.files?.images,
     // uploadedBy: req.user._id,
   };
+
+  console.log("Payload => ", payload);
 
   const data = await fleetService.updateFleet(payload, attachmentPayload);
 

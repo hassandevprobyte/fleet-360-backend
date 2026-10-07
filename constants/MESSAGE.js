@@ -1,4 +1,9 @@
 exports.error = {
+  access: {
+    notFound: "Access not found",
+    userAccessNotFound: "User access not found",
+    userExists: "Access user already exists",
+  },
   asset: {
     notFound: "Asset not found",
   },

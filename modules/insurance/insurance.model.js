@@ -7,7 +7,6 @@ const schema = new mongoose.Schema(
   {
     company: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
     },
     fleet: {
       type: mongoose.Schema.Types.ObjectId,
@@ -60,6 +59,9 @@ const schema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
+    },
+    documents: {
+      type: [String],
     },
   },
   {

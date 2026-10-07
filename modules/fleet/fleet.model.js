@@ -4,8 +4,24 @@ const mongoose = require("mongoose");
 const MODELS = require("../../constants/MODELS");
 const ENUMS = require("../../constants/ENUMS");
 
+const driverDetailsSchema = {
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+  },
+  licenseNumber: {
+    type: String,
+  },
+  licenseExpiry: {
+    type: Date,
+  },
+  _id: false,
+};
+
 const schema = new mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
     make: {
       type: mongoose.Schema.Types.ObjectId,
       ref: MODELS.PICKLIST,
@@ -78,11 +94,8 @@ const schema = new mongoose.Schema(
       ref: MODELS.PICKLIST,
       required: [true, "condition is required"],
     },
-    company: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
-    assignedTo: {
-      type: mongoose.Schema.Types.ObjectId,
+    driverDetails: {
+      type: driverDetailsSchema,
     },
     assignedBy: {
       type: mongoose.Schema.Types.ObjectId,

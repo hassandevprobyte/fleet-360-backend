@@ -10,6 +10,7 @@ const queryFilters = require("../middleware/queryFilters");
 const MODELS = require("../constants/MODELS");
 
 const routes = [
+  { path: "/access", resource: MODELS.ACCESS, route: require("./access/access.route") },
   { path: "/attachments", resource: MODELS.ATTACHMENT, route: require("./attachment/attachment.route") },
   { path: "/depreciations", resource: MODELS.DEPRECIATION, route: require("./depreciation/depreciation.route") },
   { path: "/fleets", resource: MODELS.FLEET, route: require("./fleet/fleet.route") },

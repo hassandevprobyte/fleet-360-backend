@@ -6,7 +6,14 @@ const ENUMS = require("../../constants/ENUMS");
 
 exports.getFleetById = objectId.required();
 
+const driverDetailsSchema = Joi.object({
+  user: objectId.required(),
+  licenseNumber: Joi.string().trim().min(3).max(255).required(),
+  licenseExpiry: Joi.date().required(),
+});
+
 exports.baseSchema = Joi.object({
+  company: objectId,
   make: objectId,
   model: objectId,
   year: Joi.number().min(1900).max(2100),
@@ -24,18 +31,35 @@ exports.baseSchema = Joi.object({
     .valid(...Object.values(ENUMS.FLEET.STATUSES))
     .default(ENUMS.FLEET.STATUSES.IN_HOUSE),
   condition: objectId,
-  company: objectId,
-  assignedTo: objectId,
   assignedBy: objectId,
   assignedOn: Joi.date(),
   inspector: objectId,
   createdBy: objectId,
 });
 
-exports.createFleet = exports.baseSchema.fork(
-  ["make", "model", "year", "type", "fuelType", "transmission", "color", "licensePlate", "purchaseAmount", "purchaseDate", "rent", "initialOdometer", "status", "condition"],
-  (schema) => schema.required(),
-);
+exports.createFleet = exports.baseSchema
+  .fork(
+    ["make", "model", "year", "type", "fuelType", "transmission", "color", "licensePlate", "purchaseAmount", "purchaseDate", "rent", "initialOdometer", "status", "condition"],
+    (schema) => schema.required(),
+  )
+  .keys({
+    driverDetails: Joi.when("status", {
+      switch: [
+        {
+          is: ENUMS.FLEET.STATUSES.IN_HOUSE,
+          then: Joi.forbidden(),
+        },
+        {
+          is: ENUMS.FLEET.STATUSES.ASSIGNED,
+          then: driverDetailsSchema.required(),
+        },
+        {
+          is: ENUMS.FLEET.STATUSES.IN_MAINTENANCE,
+          then: driverDetailsSchema.optional(),
+        },
+      ],
+    }),
+  });
 
 exports.updateFleet = exports.baseSchema.append({ id: objectId.required() }).fork("createdBy", (schema) => schema.strip());
 

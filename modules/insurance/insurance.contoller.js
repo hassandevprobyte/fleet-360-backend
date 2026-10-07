@@ -42,7 +42,6 @@ exports.getInsuranceById = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createInsurance = asyncHandler(async (req, res) => {
   const insurancePayload = {
-    company: req.body.company,
     fleet: req.body.fleet,
     policyNumber: req.body.policyNumber,
     provider: req.body.provider,
@@ -56,7 +55,10 @@ exports.createInsurance = asyncHandler(async (req, res) => {
     notes: req.body.notes,
   };
 
-  const attachmentPayload = { files: req.files };
+  const attachmentPayload = {
+    documents: req.files?.documents,
+    // uploadedBy: req.user.id,
+  };
 
   const data = await insuranceService.createInsurance(insurancePayload, attachmentPayload);
 
@@ -69,7 +71,6 @@ exports.createInsurance = asyncHandler(async (req, res) => {
 exports.updateInsurance = asyncHandler(async (req, res) => {
   const payload = {
     id: req.params.id,
-    company: req.body.company,
     fleet: req.body.fleet,
     policyNumber: req.body.policyNumber,
     provider: req.body.provider,
@@ -83,7 +84,12 @@ exports.updateInsurance = asyncHandler(async (req, res) => {
     notes: req.body.notes,
   };
 
-  const data = await insuranceService.updateInsurance(payload);
+  const attachmentPayload = {
+    documents: req.files?.documents,
+    // uploadedBy: req.user.id,
+  };
+
+  const data = await insuranceService.updateInsurance(payload, attachmentPayload);
 
   res.status(200).json(data);
 });
