@@ -1,13 +1,18 @@
 const Joi = require("joi");
 const { objectId } = require("../../config");
 
+// Constants
+const ENUMS = require("../../constants/ENUMS");
+
 exports.getInsuranceById = objectId.required();
 
 exports.baseSchema = Joi.object({
   fleet: objectId,
   policyNumber: Joi.string().trim(),
   provider: objectId,
-  status: objectId,
+  status: Joi.string()
+    .valid(...Object.values(ENUMS.INSURANCE.STATUSES))
+    .default(ENUMS.INSURANCE.STATUSES.ACTIVE),
   startDate: Joi.date(),
   endDate: Joi.date().greater(Joi.ref("startDate")),
   cancellationDate: Joi.date(),

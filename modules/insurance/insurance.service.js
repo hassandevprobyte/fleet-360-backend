@@ -54,14 +54,6 @@ exports.createInsurance = async (payload, attachmentPayload) => {
 
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.provider);
 
-    if (validatedPayload.status) {
-      await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
-    } else {
-      const status = await picklistValidation.throwErrorIfDefaultPicklistDoesNotExistInContext(MODELS.MAINTENANCE, "status");
-
-      validatedPayload.status = status._id;
-    }
-
     const insurance = await insuranceRepository.createInsurance(validatedPayload);
 
     const updatePayload = {};
@@ -107,8 +99,7 @@ exports.updateInsurance = async (payload, attachmentPayload) => {
       updatePayload.provider = validatedPayload.provider;
     }
 
-    if (validatedPayload.status && validatedPayload.status !== String(existingInsurance?.status?._id)) {
-      await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.status);
+    if (validatedPayload.status && validatedPayload.status !== existingMaintenance?.status) {
       updatePayload.status = validatedPayload.status;
     }
 

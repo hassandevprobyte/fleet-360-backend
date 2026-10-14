@@ -6,6 +6,13 @@ const ENUMS = {
       IN_HOUSE: "in_house",
     },
   },
+  INSURANCE: {
+    STATUSES: {
+      ACTIVE: "active",
+      EXPIRED: "expired",
+      CANCELLED: "cancelled",
+    },
+  },
   MAINTENANCE: {
     STATUSES: {
       INITIATED: "initiated",

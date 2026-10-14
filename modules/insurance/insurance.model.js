@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 // Constants
 const MODELS = require("../../constants/MODELS");
+const ENUMS = require("../../constants/ENUMS");
 
 const schema = new mongoose.Schema(
   {
@@ -24,9 +25,9 @@ const schema = new mongoose.Schema(
       required: [true, "provider is required"],
     },
     status: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: MODELS.PICKLIST,
-      required: [true, "status is required"],
+      type: String,
+      enum: Object.values(ENUMS.INSURANCE.STATUSES),
+      default: ENUMS.INSURANCE.STATUSES.ACTIVE,
     },
     startDate: {
       type: Date,

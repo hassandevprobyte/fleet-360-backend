@@ -42,6 +42,7 @@ const errorHandler = (err, req, res, next) => {
     metaData = handleDefaultError(err);
   }
 
+  res.message = metaData.message;
   res.status(+metaData.statusCode).json(metaData);
 };
 

@@ -22,7 +22,7 @@ const routes = [
 ];
 
 routes.forEach((route) => {
-  const middlewares = [];
+  const middlewares = [protect];
 
   if (route.resource) {
     // middlewares.push(checkPermissions(route.resource));

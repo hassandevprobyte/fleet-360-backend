@@ -27,9 +27,7 @@ exports.baseSchema = Joi.object({
   rent: Joi.number().positive(),
   initialOdometer: Joi.number().positive(),
   currentOdometer: Joi.number().positive(),
-  status: Joi.string()
-    .valid(...Object.values(ENUMS.FLEET.STATUSES))
-    .default(ENUMS.FLEET.STATUSES.IN_HOUSE),
+  status: Joi.string().valid(...Object.values(ENUMS.FLEET.STATUSES)),
   condition: objectId,
   assignedBy: objectId,
   assignedOn: Joi.date(),
@@ -43,6 +41,7 @@ exports.createFleet = exports.baseSchema
     (schema) => schema.required(),
   )
   .keys({
+    status: Joi.string().default(ENUMS.FLEET.STATUSES.IN_HOUSE),
     driverDetails: Joi.when("status", {
       switch: [
         {
@@ -61,7 +60,27 @@ exports.createFleet = exports.baseSchema
     }),
   });
 
-exports.updateFleet = exports.baseSchema.append({ id: objectId.required() }).fork("createdBy", (schema) => schema.strip());
+exports.updateFleet = exports.baseSchema
+  .append({ id: objectId.required() })
+  .fork("createdBy", (schema) => schema.strip())
+  .keys({
+    driverDetails: Joi.when("status", {
+      switch: [
+        {
+          is: ENUMS.FLEET.STATUSES.IN_HOUSE,
+          then: Joi.forbidden(),
+        },
+        {
+          is: ENUMS.FLEET.STATUSES.ASSIGNED,
+          then: driverDetailsSchema.required(),
+        },
+        {
+          is: ENUMS.FLEET.STATUSES.IN_MAINTENANCE,
+          then: driverDetailsSchema.optional(),
+        },
+      ],
+    }),
+  });
 
 exports.getFleetsSummaryByGroup = Joi.object({
   filters: Joi.object().default({}).optional(),

@@ -36,7 +36,7 @@ const queryFilters = (modelName, extraFields = []) => {
     }
 
     req.filters = filters;
-    console.dir({ middleware: "queryFilters", queryScope, filters: req.filters }, { depth: null }); // temp
+    // console.dir({ middleware: "queryFilters", queryScope, filters: req.filters }, { depth: null }); // temp
     next();
   };
 };

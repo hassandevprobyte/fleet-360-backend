@@ -18,8 +18,8 @@ const removeUploadedFiles = async (options) => {
         console.error(`Failed to delete ${paths[i]}:`, r.reason?.message);
       }
     });
-  } catch (err) {
-    console.error("removeUploadedFiles failed:", err.message);
+  } catch (error) {
+    console.error("Failed to remove uploaded files", error.message);
   }
 };
 
