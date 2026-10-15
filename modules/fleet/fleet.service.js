@@ -234,26 +234,20 @@ exports.updateFleet = async (payload, attachmentPayload) => {
       updatePayload.status = validatedPayload.status;
     }
 
-    if (attachmentPayload?.documents?.length) {
+    if (attachmentPayload.documents || attachmentPayload.images) {
+      await attachmentService.deleteAttachmentsByResource(MODELS.FLEET, existingFleet._id);
+
       await attachmentService.addAttachments({
         resource: MODELS.FLEET,
         resourceId: existingFleet._id,
-        files: attachmentPayload.documents,
+        files: [...(attachmentPayload?.documents || []), ...(attachmentPayload?.images || [])],
         uploadedBy: attachmentPayload.uploadedBy,
       });
 
-      updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
-    }
-
-    if (attachmentPayload?.images?.length) {
-      await attachmentService.addAttachments({
-        resource: MODELS.FLEET,
-        resourceId: existingFleet._id,
-        files: attachmentPayload.images,
-        uploadedBy: attachmentPayload.uploadedBy,
-      });
-
-      updatePayload.images = attachmentPayload.images.map((image) => image.path);
+      updatePayload.$set = {
+        documents: (attachmentPayload.documents || []).map((document) => document.path),
+        images: (attachmentPayload.images || []).map((image) => image.path),
+      };
     }
 
     if (!Object.keys(updatePayload).length) return existingFleet;

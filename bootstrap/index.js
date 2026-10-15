@@ -5,6 +5,7 @@ const bootstrap = async () => {
   await connectDB();
 
   await seed.seedSuperAdmin();
+  await seed.seedDefaultPicklists();
 
   console.log("App bootstrapped successfully".bgGreen.white);
 };

@@ -135,15 +135,19 @@ exports.updateInsurance = async (payload, attachmentPayload) => {
       updatePayload.notes = validatedPayload.notes;
     }
 
-    if (attachmentPayload?.documents?.length) {
+    if (attachmentPayload.documents) {
+      await attachmentService.deleteAttachmentsByResource(MODELS.INSURANCE, existingInsurance._id);
+
       await attachmentService.addAttachments({
         resource: MODELS.INSURANCE,
         resourceId: existingInsurance._id,
-        files: attachmentPayload.documents,
+        files: attachmentPayload?.documents,
         uploadedBy: attachmentPayload.uploadedBy,
       });
 
-      updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
+      updatePayload.$set = {
+        documents: (attachmentPayload.documents || []).map((document) => document.path),
+      };
     }
 
     if (!Object.keys(updatePayload).length) return existingInsurance;

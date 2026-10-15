@@ -179,26 +179,20 @@ exports.updateMaintenance = async (payload, attachmentPayload) => {
       updatePayload.checklist = validatedPayload.checklist;
     }
 
-    if (attachmentPayload?.conditionBefore?.length) {
+    if (attachmentPayload.conditionBefore || attachmentPayload.conditionAfter) {
+      await attachmentService.deleteAttachmentsByResource(MODELS.MAINTENANCE, existingMaintenance._id);
+
       await attachmentService.addAttachments({
         resource: MODELS.MAINTENANCE,
         resourceId: existingMaintenance._id,
-        files: attachmentPayload.conditionBefore,
+        files: [...(attachmentPayload?.conditionBefore || []), ...(attachmentPayload?.conditionAfter || [])],
         uploadedBy: attachmentPayload.uploadedBy,
       });
 
-      updatePayload.conditionBefore = attachmentPayload.conditionBefore.map((file) => file.path);
-    }
-
-    if (attachmentPayload?.conditionAfter?.length) {
-      await attachmentService.addAttachments({
-        resource: MODELS.MAINTENANCE,
-        resourceId: existingMaintenance._id,
-        files: attachmentPayload.conditionAfter,
-        uploadedBy: attachmentPayload.uploadedBy,
-      });
-
-      updatePayload.conditionAfter = attachmentPayload.conditionAfter.map((file) => file.path);
+      updatePayload.$set = {
+        conditionBefore: (attachmentPayload.conditionBefore || []).map((image) => image.path),
+        conditionAfter: (attachmentPayload.conditionAfter || []).map((image) => image.path),
+      };
     }
 
     if (!Object.keys(updatePayload).length) return existingMaintenance;
