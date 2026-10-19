@@ -17,6 +17,7 @@ const upload = uploadMiddleware({
 
 router.route("/").get(fleetController.getFleetsWithPagination).post(upload, fleetController.createFleet);
 router.route("/all").get(fleetController.getAllFleets);
+router.route("/export").get(fleetController.exportFleets);
 router.get("/summary/byGroup", fleetController.getFleetsSummaryByGroup);
 router.route("/:id").get(fleetController.getFleetById).patch(upload, fleetController.updateFleet).delete(fleetController.deleteFleet);
 
