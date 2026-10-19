@@ -109,3 +109,13 @@ exports.deleteDepreciation = async (depreciationId) => {
 
   return { deletedId: depreciationId };
 };
+
+exports.deleteDepreciationByFleetId = async (depreciationId) => {
+  joi.validate(depreciationId, joiSchema.getDepreciationById);
+
+  await depreciationValidation.throwErrorIfDepreciationDoesNotExist(depreciationId);
+
+  await depreciationRepository.deleteDepreciationById(depreciationId);
+
+  return { deletedId: depreciationId };
+};

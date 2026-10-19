@@ -132,15 +132,19 @@ exports.updateTaxation = async (payload, attachmentPayload) => {
       updatePayload.notes = validatedPayload.notes;
     }
 
-    if (attachmentPayload?.documents?.length) {
+    if (attachmentPayload.documents) {
+      await attachmentService.deleteAttachmentsByResource(MODELS.TAXATION, existingTaxation._id);
+
       await attachmentService.addAttachments({
         resource: MODELS.TAXATION,
         resourceId: existingTaxation._id,
-        files: attachmentPayload.documents,
+        files: attachmentPayload?.documents,
         uploadedBy: attachmentPayload.uploadedBy,
       });
 
-      updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
+      updatePayload.$set = {
+        documents: (attachmentPayload.documents || []).map((image) => image.path),
+      };
     }
 
     if (!Object.keys(updatePayload).length) return existingTaxation;

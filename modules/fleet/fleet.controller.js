@@ -138,3 +138,16 @@ exports.deleteFleet = asyncHandler(async (req, res) => {
 
   res.status(200).json(data);
 });
+
+// @desc    Export Fleet
+// @route   GET /api/v1/fleets/export
+// @access  Private
+exports.exportFleets = asyncHandler(async (req, res) => {
+  const filters = req.filters;
+
+  res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", `attachment; filename=fleets_${Date.now()}.xlsx`);
+
+  await fleetService.exportFleets(filters, res);
+});

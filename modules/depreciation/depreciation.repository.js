@@ -33,3 +33,7 @@ exports.updateDepreciationById = async (depreciationId, payload) => {
 exports.deleteDepreciationById = async (depreciationId) => {
   return Depreciation.findByIdAndDelete(depreciationId);
 };
+
+exports.deleteDepreciationByFleetId = async (fleetId) => {
+  return Depreciation.findOneAndDelete({ fleet: fleetId });
+};

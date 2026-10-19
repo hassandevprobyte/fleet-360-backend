@@ -5,6 +5,7 @@ const attachmentService = require("../attachment/attachment.service");
 
 // Repositories
 const fleetRepository = require("./fleet.repository");
+const depreciationRepository = require("../depreciation/depreciation.repository");
 
 // Validations
 const joi = require("../../config");
@@ -17,6 +18,9 @@ const attachmentHelpers = require("../attachment/attachment.helper");
 const fleetHelpers = require("./fleet.helper");
 
 // Utilities
+const excel = require("../../utils/excel");
+const formatAmount = require("../../utils/formatAmount");
+const formatDate = require("../../utils/formatDate");
 const isSameDay = require("../../utils/isSameDay");
 const removeUploadedFiles = require("../../utils/removeUploadedFiles");
 
@@ -263,8 +267,55 @@ exports.deleteFleet = async (fleetId) => {
   joi.validate(fleetId, joiSchema.getFleetById);
 
   await fleetValidation.throwErrorIfFleetDoesNotExist(fleetId);
-  await attachmentService.deleteAttachmentsByResource(MODELS.FLEET, fleetId);
+  await Promise.all([attachmentService.deleteAttachmentsByResource(MODELS.FLEET, fleetId), depreciationRepository.deleteDepreciationByFleetId(fleetId)]);
+
   await fleetRepository.deleteFleetById(fleetId);
 
   return { deletedId: fleetId };
+};
+
+exports.exportFleets = async (filters, stream) => {
+  const assets = await fleetRepository.getAllFleets(filters);
+
+  const columns = [
+    { header: "Purchase Date", key: "purchaseDate" },
+    { header: "User", key: "user" },
+    { header: "Company", key: "company" },
+    { header: "Make", key: "make" },
+    { header: "Model", key: "model" },
+    { header: "Year", key: "year" },
+    { header: "Type", key: "type" },
+    { header: "Fuel Type", key: "fuelType" },
+    { header: "transmission", key: "transmission" },
+    { header: "color", key: "color" },
+    { header: "Purchase Amount", key: "purchaseAmount" },
+    { header: "License Plate", key: "licensePlate" },
+    { header: "Status", key: "status" },
+    { header: "Rent", key: "rent" },
+    { header: "Initial Odometer", key: "initialOdometer" },
+    { header: "Current Odometer", key: "currentOdometer" },
+    { header: "Condition", key: "condition" },
+  ];
+
+  const rows = assets.map((fleet) => ({
+    purchaseDate: formatDate(fleet.purchaseDate),
+    user: lodash.startCase(fleet.driverDetails.user.name ?? ""),
+    company: lodash.startCase(fleet.company?.title ?? ""),
+    make: lodash.startCase(fleet.make?.title ?? ""),
+    model: lodash.startCase(fleet.model?.title ?? ""),
+    year: lodash.startCase(fleet.year ?? ""),
+    type: lodash.startCase(fleet.type?.title ?? ""),
+    fuelType: lodash.startCase(fleet.fuelType?.title ?? ""),
+    transmission: lodash.startCase(fleet.transmission?.title ?? ""),
+    color: lodash.startCase(fleet.color ?? ""),
+    purchaseAmount: fleet.purchaseAmount ? formatAmount(fleet.purchaseAmount, "en-PK", { currency: "PKR" }) : null,
+    licensePlate: lodash.startCase(fleet.licensePlate ?? ""),
+    status: lodash.startCase(fleet.status ?? ""),
+    rent: fleet.rent ? formatAmount(fleet.rent, "en-PK", { currency: "PKR" }) : null,
+    initialOdometer: fleet.initialOdometer ?? "-",
+    currentOdometer: fleet.currentOdometer ?? "-",
+    condition: lodash.startCase(fleet.condition?.title ?? ""),
+  }));
+
+  await excel.export({ stream, sheetName: "Fleets", columns, rows });
 };
