@@ -41,3 +41,7 @@ exports.updateMaintenanceById = async (maintenanceId, payload) => {
 exports.deleteMaintenanceById = async (maintenanceId) => {
   return Maintenance.findByIdAndDelete(maintenanceId);
 };
+
+exports.deleteMaintenanceByFleetId = async (fleetId) => {
+  return Maintenance.findOneAndDelete({ fleet: fleetId });
+};

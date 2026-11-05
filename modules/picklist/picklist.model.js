@@ -1,9 +1,7 @@
 const mongoose = require("mongoose");
 
 // Constants
-const COLORS = require("../../constants/COLORS");
-const MODELS = require("../../constants/MODELS");
-const { SCOPE } = require("../../constants/PICKLIST");
+const { COLORS, MODELS, PICKLIST } = require("../../common/constants");
 
 const PicklistSchema = new mongoose.Schema(
   {
@@ -30,15 +28,15 @@ const PicklistSchema = new mongoose.Schema(
     },
     scope: {
       type: String,
-      enum: Object.values(SCOPE),
-      default: SCOPE.RESOURCE,
+      enum: Object.values(PICKLIST.SCOPE),
+      default: PICKLIST.SCOPE.RESOURCE,
     },
     resource: {
       type: String,
       trim: true,
       enum: Object.values(MODELS),
       required: function () {
-        return this.scope === SCOPE.RESOURCE;
+        return this.scope === PICKLIST.SCOPE.RESOURCE;
       },
     },
     field: {

@@ -1,6 +1,6 @@
 // Utilities
-const scopeQueryBuilder = require("../utils/scopeQueryBuilder");
-const transformQueryParams = require("../utils/transformQueryToMongooseSyntax");
+const scopeQueryBuilder = require("../common/utils/scopeQueryBuilder");
+const transformQueryParams = require("../common/utils/transformQueryToMongooseSyntax");
 
 const orFilters = {};
 
@@ -10,10 +10,21 @@ const queryFilters = (modelName, extraFields = []) => {
       return next();
     }
 
-    // const queryScope = scopeQueryBuilder(modelName, req.user);
+    // const queryScope = scopeQueryBuilder(modelName, req.context?.user);
     const queryScope = {};
 
-    const filters = transformQueryParams(modelName, { ...queryScope, ...(req.query.query || {}) }, ["$or", ...extraFields], ["$or", "resource", "field"]);
+    const filters = transformQueryParams(
+      modelName,
+      {
+        ...queryScope,
+        ...(req.query.query || {}),
+        ...(req.context?.workspaceId && {
+          workspace: req.context?.workspaceId,
+        }),
+      },
+      ["$or", ...extraFields],
+      ["$or", "resource", "field"],
+    );
 
     const andConditions = [];
 

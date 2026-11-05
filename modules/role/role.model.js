@@ -1,9 +1,7 @@
 const mongoose = require("mongoose");
 
 // Constants
-const CRUD = require("../../constants/CRUD");
-const SCOPE = require("../../constants/SCOPE");
-const MODELS = require("../../constants/MODELS");
+const { CRUD, SCOPE, MODELS } = require("../../common/constants");
 
 const RoleSchema = new mongoose.Schema(
   {

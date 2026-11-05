@@ -3,7 +3,7 @@ const { randomUUID } = require("crypto");
 const { UAParser } = require("ua-parser-js");
 
 // Middlewares
-const logger = require("../utils/logger");
+const logger = require("../common/utils/logger");
 
 // Environment Variables
 const { env } = require("../config");
@@ -27,7 +27,7 @@ module.exports = (req, res, next) => {
 
     const ip = req.headers["x-real-ip"] || req.ip;
     const protocol = req.headers["x-scheme"] || req.protocol;
-    const userId = req.user?.id?.toString() || "-";
+    const userId = req.context?.user?.id?.toString() || "-";
 
     const message = {
       ip: `${ip}`,

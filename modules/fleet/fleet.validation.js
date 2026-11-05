@@ -4,7 +4,7 @@ const Boom = require("@hapi/boom");
 const fleetRepository = require("./fleet.repository");
 
 // Constants
-const message = require("../../constants/MESSAGE");
+const { MESSAGE: message } = require("../../common/constants");
 
 exports.throwErrorIfFleetDoesNotExist = async (fleetId) => {
   const fleet = await fleetRepository.getFleetById(fleetId);

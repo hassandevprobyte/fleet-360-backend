@@ -4,7 +4,7 @@ const Boom = require("@hapi/boom");
 const depreciationRepository = require("./depreciation.repository");
 
 // Constants
-const message = require("../../constants/MESSAGE");
+const { MESSAGE: message } = require("../../common/constants");
 
 exports.throwErrorIfDepreciationDoesNotExist = async (depreciationId) => {
   const depreciation = await depreciationRepository.getDepreciationById(depreciationId);

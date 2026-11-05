@@ -7,19 +7,18 @@ const attachmentService = require("../attachment/attachment.service");
 const insuranceRepository = require("./insurance.repository");
 
 // Validations
-const joi = require("../../config");
+const joi = require("../../config/joi");
 const joiSchema = require("./insurance.schema");
 const fleetValidation = require("../fleet/fleet.validation");
 const insuranceValidation = require("./insurance.validation");
 const picklistValidation = require("../picklist/picklist.validation");
 
 // Constants
-const MODELS = require("../../constants/MODELS");
+const { MODELS } = require("../../common/constants");
 
 // Utilities
-const isSameDay = require("../../utils/isSameDay");
-const isValidDateRange = require("../../utils/isValidDateRange");
-const removeUploadedFiles = require("../../utils/removeUploadedFiles");
+const validators = require("../../common/validators");
+const removeUploadedFiles = require("../../common/utils/removeUploadedFiles");
 
 exports.getAllInsurance = async (filters) => {
   return insuranceRepository.getAllInsurance(filters);
@@ -47,10 +46,9 @@ exports.getInsuranceById = async (insuranceId) => {
 exports.createInsurance = async (payload, attachmentPayload) => {
   try {
     const validatedPayload = joi.validate(payload, joiSchema.createInsurance);
-    isValidDateRange(validatedPayload.startDate, validatedPayload.endDate);
+    validators.isValidDateRange(validatedPayload.startDate, validatedPayload.endDate);
 
-    const fleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
-    validatedPayload.company = fleet.company;
+    await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
 
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.provider);
 
@@ -87,7 +85,6 @@ exports.updateInsurance = async (payload, attachmentPayload) => {
     if (validatedPayload.fleet && validatedPayload.fleet !== String(existingInsurance?.fleet?._id)) {
       const fleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
       updatePayload.fleet = validatedPayload.fleet;
-      updatePayload.company = fleet.company;
     }
 
     if (validatedPayload.policyNumber && validatedPayload.policyNumber !== existingInsurance?.policyNumber) {
@@ -105,17 +102,17 @@ exports.updateInsurance = async (payload, attachmentPayload) => {
 
     const updatedStartDate = validatedPayload.startDate || existingInsurance?.startDate;
     const updatedEndDate = validatedPayload.endDate || existingInsurance?.endDate;
-    isValidDateRange(updatedStartDate, updatedEndDate);
+    validators.isValidDateRange(updatedStartDate, updatedEndDate);
 
-    if (validatedPayload.startDate && !isSameDay(validatedPayload.startDate, existingInsurance?.startDate)) {
+    if (validatedPayload.startDate && !validators.isSameDay(validatedPayload.startDate, existingInsurance?.startDate)) {
       updatePayload.startDate = validatedPayload.startDate;
     }
 
-    if (validatedPayload.endDate && !isSameDay(validatedPayload.endDate, existingInsurance?.endDate)) {
+    if (validatedPayload.endDate && !validators.isSameDay(validatedPayload.endDate, existingInsurance?.endDate)) {
       updatePayload.endDate = validatedPayload.endDate;
     }
 
-    if (validatedPayload.cancellationDate && !isSameDay(validatedPayload.cancellationDate, existingInsurance?.cancellationDate)) {
+    if (validatedPayload.cancellationDate && !validators.isSameDay(validatedPayload.cancellationDate, existingInsurance?.cancellationDate)) {
       updatePayload.cancellationDate = validatedPayload.cancellationDate;
     }
 

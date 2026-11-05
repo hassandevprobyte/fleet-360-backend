@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 // Constants
-const MODELS = require("../../constants/MODELS");
+const { MODELS } = require("../../common/constants");
 
 const AttachmentSchema = new mongoose.Schema(
   {
@@ -36,6 +36,8 @@ const AttachmentSchema = new mongoose.Schema(
     },
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: MODELS.USER,
+      required: [true, "Uploaded by is required"],
     },
   },
   { timestamps: true },

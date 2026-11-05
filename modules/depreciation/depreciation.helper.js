@@ -1,7 +1,7 @@
 const Boom = require("@hapi/boom");
 
 // Constants
-const ENUMS = require("../../constants/ENUMS");
+const { ENUMS } = require("../../common/constants");
 
 const getDepreciationMethod = (method) => {
   return Object.values(ENUMS.DEPRECIATION.METHODS).find((item) => item.VALUE === method);

@@ -9,8 +9,7 @@ const joiSchema = require("./role.schema");
 const roleValidation = require("./role.validation");
 
 // Constants
-const CRUD = require("../../constants/CRUD");
-const SCOPE = require("../../constants/SCOPE");
+const { CRUD, SCOPE } = require("../../common/constants");
 
 exports.getAllRoles = async (filters) => {
   return roleRepository.getAllRoles(filters);

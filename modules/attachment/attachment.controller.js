@@ -29,7 +29,7 @@ exports.addAttachmentsByResource = asyncHandler(async (req, res) => {
     resource: req.params.resource,
     resourceId: req.params.resourceId,
     files: req.files,
-    uploadedBy: req.user._id,
+    uploadedBy: req.context?.user?._id,
   };
 
   const data = await attachmentService.addAttachments(payload);
@@ -42,6 +42,15 @@ exports.addAttachmentsByResource = asyncHandler(async (req, res) => {
 // @access  Private
 exports.deleteAttachment = asyncHandler(async (req, res) => {
   const data = await attachmentService.deleteAttachment(req.params.id);
+
+  res.status(200).json(data);
+});
+
+// @desc    Delete attachments
+// @route   DELETE /api/v1/attachments/
+// @access  Private
+exports.deleteAttachment = asyncHandler(async (req, res) => {
+  const data = await attachmentService.deleteAttachments(req.body.ids);
 
   res.status(200).json(data);
 });

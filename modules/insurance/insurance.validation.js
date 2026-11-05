@@ -4,7 +4,7 @@ const Boom = require("@hapi/boom");
 const insuranceRepository = require("./insurance.repository");
 
 // Constants
-const message = require("../../constants/MESSAGE");
+const { MESSAGE: message } = require("../../common/constants");
 
 exports.throwErrorIfInsuranceDoesNotExist = async (insuranceId) => {
   const insurance = await insuranceRepository.getInsuranceById(insuranceId);

@@ -1,38 +1,34 @@
-const Joi = require("joi");
-const { objectId } = require("../../config");
+const Joi = require("../../config/joi");
 
 // Constants
-const ENUMS = require("../../constants/ENUMS");
+const { STATUSES } = require("../../common/constants");
 
-exports.getMaintenanceById = objectId.required();
+exports.getMaintenanceById = Joi.objectId().required();
 
 exports.baseSchema = Joi.object({
-  company: objectId,
-  fleet: objectId,
-  type: objectId,
-  priority: objectId,
-  vendor: objectId,
-  status: Joi.string()
-    .valid(...Object.values(ENUMS.MAINTENANCE.STATUSES))
-    .default(ENUMS.MAINTENANCE.STATUSES.INITIATED),
+  fleet: Joi.objectId(),
+  type: Joi.objectId(),
+  priority: Joi.objectId(),
+  vendor: Joi.objectId(),
+  status: Joi.string().valid(...Object.values(STATUSES.MAINTENANCE)),
   startDate: Joi.date(),
   endDate: Joi.date().greater(Joi.ref("startDate")),
   odometer: Joi.number().min(0),
   cost: Joi.number().min(0),
   checklist: Joi.array().items(
     Joi.object({
-      item: objectId.required(),
-      condition: objectId,
+      item: Joi.objectId().required(),
+      condition: Joi.objectId(),
     }),
   ),
   notes: Joi.string().trim().lowercase(),
-  createdBy: objectId,
+  createdBy: Joi.objectId(),
 });
 
-exports.createMaintenance = exports.baseSchema.fork(["fleet", "type"], (schema) => schema.required());
+exports.createMaintenance = exports.baseSchema.fork(["fleet", "type"], (schema) => schema.required()).fork("status", (schema) => schema.default(STATUSES.MAINTENANCE.INITIATED));
 
 exports.updateMaintenance = exports.baseSchema
   .append({
-    id: objectId.required(),
+    id: Joi.objectId().required(),
   })
   .fork("createdBy", (schema) => schema.strip());

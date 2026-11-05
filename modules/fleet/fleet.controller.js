@@ -57,6 +57,7 @@ exports.getFleetsSummaryByGroup = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createFleet = asyncHandler(async (req, res) => {
   const fleetPayload = {
+    workspace: req.context?.workspaceId,
     make: req.body.make,
     model: req.body.model,
     year: req.body.year,
@@ -71,18 +72,17 @@ exports.createFleet = asyncHandler(async (req, res) => {
     initialOdometer: req.body.initialOdometer,
     status: req.body.status,
     condition: req.body.condition,
-    company: req.body.company,
     driverDetails: req.body.driverDetails,
-    // assignedBy: req.user._id,
+    // assignedBy: req.context?.user._id,
     assignedOn: req.body.assignedOn,
     inspector: req.body.inspector,
-    // createdBy: req.user._id,
+    createdBy: req.context?.user._id,
   };
 
   const attachmentPayload = {
     documents: req.files?.documents,
     images: req.files?.images,
-    // uploadedBy: req.user._id,
+    uploadedBy: req.context?.user?._id,
   };
 
   const data = await fleetService.createFleet(fleetPayload, attachmentPayload);
@@ -110,20 +110,19 @@ exports.updateFleet = asyncHandler(async (req, res) => {
     initialOdometer: req.body.initialOdometer,
     status: req.body.status,
     condition: req.body.condition,
-    company: req.body.company,
     driverDetails: req.body.driverDetails,
-    // assignedBy: req.user._id,
+    // assignedBy: req.context?.user._id,
     assignedOn: req.body.assignedOn,
     inspector: req.body.inspector,
+    removedDocuments: req.body.removedDocuments,
+    removedImages: req.body.removedImages,
   };
 
   const attachmentPayload = {
     documents: req.files?.documents,
     images: req.files?.images,
-    // uploadedBy: req.user._id,
+    uploadedBy: req.context?.user?._id,
   };
-
-  console.log("Payload => ", payload);
 
   const data = await fleetService.updateFleet(payload, attachmentPayload);
 

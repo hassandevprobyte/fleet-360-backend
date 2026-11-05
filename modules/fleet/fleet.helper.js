@@ -4,18 +4,15 @@ const Boom = require("@hapi/boom");
 const picklistRepository = require("../picklist/picklist.repository");
 
 // Utilities
-const isValidObjectId = require("../../utils/isValidObjectId");
+const validators = require("../../common/validators");
 
 // Config
-const ENUMS = require("../../constants/ENUMS");
+const { ENUMS } = require("../../common/constants");
 
 exports.getGroupListItemsMap = async (group, filters = {}) => {
   let groupItems;
 
   switch (group) {
-    case "company":
-      break;
-
     case "brand":
       break;
 
@@ -34,13 +31,13 @@ exports.getGroupListItemsMap = async (group, filters = {}) => {
 exports.transformFleetsSummaryByGroup = async (fleetsSummary, primaryGroup, secondaryGroup) => {
   const primaryGroupIds = fleetsSummary.primaryGroupWise
     .map((group) => group?._id)
-    .filter((id) => id && isValidObjectId(id))
+    .filter((id) => id && validators.isValidObjectId(id))
     .map(String);
   const primaryFilters = { _id: { $in: primaryGroupIds } };
 
   const secondaryGroupIds = fleetsSummary.secondaryGroupWise
     .map((group) => group?._id)
-    .filter((id) => id && isValidObjectId(id))
+    .filter((id) => id && validators.isValidObjectId(id))
     .map(String);
   const secondaryFilters = { _id: { $in: secondaryGroupIds } };
 

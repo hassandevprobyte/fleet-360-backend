@@ -54,13 +54,13 @@ exports.createMaintenance = asyncHandler(async (req, res) => {
     cost: req.body.cost,
     checklist: req.body.checklist,
     notes: req.body.notes,
-    // createdBy: req.user._id,
+    // createdBy: req.context?.user._id,
   };
 
   const attachmentPayload = {
     conditionBefore: req.files?.conditionBefore,
     conditionAfter: req.files?.conditionAfter,
-    // uploadedBy: req.user._id
+    uploadedBy: req.context?.user._id,
   };
 
   const data = await maintenanceService.createMaintenance(maintenancePayload, attachmentPayload);
@@ -91,7 +91,7 @@ exports.updateMaintenance = asyncHandler(async (req, res) => {
   const attachmentPayload = {
     conditionBefore: req.files?.conditionBefore,
     conditionAfter: req.files?.conditionAfter,
-    // uploadedBy: req.user._id
+    uploadedBy: req.context?.user._id,
   };
 
   const data = await maintenanceService.updateMaintenance(maintenancePayload, attachmentPayload);

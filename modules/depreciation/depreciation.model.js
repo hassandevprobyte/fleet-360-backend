@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
 
 // Constants
-const MODELS = require("../../constants/MODELS");
-const ENUMS = require("../../constants/ENUMS");
+const { MODELS, DEPRECIATION } = require("../../common/constants");
 
 const schema = new mongoose.Schema(
   {
@@ -13,7 +12,7 @@ const schema = new mongoose.Schema(
     },
     method: {
       type: String,
-      enum: Object.values(ENUMS.DEPRECIATION.METHODS).map((method) => method.VALUE),
+      enum: Object.values(DEPRECIATION.METHODS).map((method) => method.VALUE),
     },
     salvageValue: {
       type: Number,

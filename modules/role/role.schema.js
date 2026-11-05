@@ -1,11 +1,9 @@
-const Joi = require("joi");
-const { objectId } = require("../../config");
+const Joi = require("../../config/joi");
 
 // Constants
-const CRUD = require("../../constants/CRUD");
-const SCOPE = require("../../constants/SCOPE");
+const { CRUD, SCOPE } = require("../../common/constants");
 
-exports.getRoleById = objectId.required();
+exports.getRoleById = Joi.objectId().required();
 
 exports.baseSchema = Joi.object({
   title: Joi.string().lowercase().trim().min(2).max(255),
@@ -41,4 +39,4 @@ exports.baseSchema = Joi.object({
 
 exports.createRole = exports.baseSchema.fork(["title", "permissions", "scope", "indexPath"], (schema) => schema.required());
 
-exports.updateRole = exports.baseSchema.append({ id: objectId.required() });
+exports.updateRole = exports.baseSchema.append({ id: Joi.objectId().required() });

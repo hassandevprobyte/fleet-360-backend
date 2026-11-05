@@ -1,7 +1,7 @@
 const Picklist = require("./picklist.model");
 
 // Constants
-const { SCOPE } = require("../../constants/PICKLIST");
+const { PICKLIST } = require("../../common/constants");
 
 const POPULATION_PIPELINE = [{ path: "parentPicklist" }];
 
@@ -43,7 +43,7 @@ exports.getPicklistByAcronymInContext = (acronym, scope, resource, field, parent
   return Picklist.findOne({ acronym, scope, resource, field, parentPicklist });
 };
 
-exports.getDefaultPicklistInContext = (scope = SCOPE.RESOURCE, resource, field, parentPicklist = null) => {
+exports.getDefaultPicklistInContext = (scope = PICKLIST.SCOPE.RESOURCE, resource, field, parentPicklist = null) => {
   return Picklist.findOne({ scope, resource, field, parentPicklist, isDefault: true });
 };
 

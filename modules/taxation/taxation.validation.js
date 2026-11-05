@@ -4,7 +4,7 @@ const Boom = require("@hapi/boom");
 const taxationRepository = require("./taxation.repository");
 
 // Constants
-const message = require("../../constants/MESSAGE");
+const { MESSAGE: message } = require("../../common/constants");
 
 exports.throwErrorIfTaxationDoesNotExist = async (taxationId) => {
   const taxation = await taxationRepository.getTaxationById(taxationId);

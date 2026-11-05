@@ -6,27 +6,27 @@ const attachmentService = require("../attachment/attachment.service");
 // Repositories
 const fleetRepository = require("./fleet.repository");
 const depreciationRepository = require("../depreciation/depreciation.repository");
+const maintenanceRepository = require("../maintenance/maintenance.repository");
 
 // Validations
 const joi = require("../../config");
 const joiSchema = require("./fleet.schema");
 const fleetValidation = require("./fleet.validation");
 const picklistValidation = require("../picklist/picklist.validation");
+const workspaceValidation = require("../workspace/workspace.validation");
 
 // Helpers
 const attachmentHelpers = require("../attachment/attachment.helper");
 const fleetHelpers = require("./fleet.helper");
 
 // Utilities
-const excel = require("../../utils/excel");
-const formatAmount = require("../../utils/formatAmount");
-const formatDate = require("../../utils/formatDate");
-const isSameDay = require("../../utils/isSameDay");
-const removeUploadedFiles = require("../../utils/removeUploadedFiles");
+const excel = require("../../common/utils/excel");
+const formatters = require("../../common/formatters");
+const validators = require("../../common/validators");
+const removeUploadedFiles = require("../../common/utils/removeUploadedFiles");
 
 // Constants
-const MODELS = require("../../constants/MODELS");
-const ENUMS = require("../../constants/ENUMS");
+const { MODELS } = require("../../common/constants");
 
 exports.getAllFleets = async (filters) => {
   return fleetRepository.getAllFleets(filters);
@@ -66,6 +66,7 @@ exports.createFleet = async (payload, attachmentPayload) => {
     validatedPayload.currentOdometer = validatedPayload.initialOdometer;
 
     await Promise.all([
+      workspaceValidation.throwErrorIfWorkspaceDoesNotExist(validatedPayload.workspace),
       fleetValidation.throwErrorIfFleetLicensePlateExists(validatedPayload.licensePlate),
       picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.make),
       picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.model),
@@ -89,26 +90,19 @@ exports.createFleet = async (payload, attachmentPayload) => {
     const fleet = await fleetRepository.createFleet(validatedPayload);
 
     const updatePayload = {};
-    if (attachmentPayload?.documents?.length) {
-      await attachmentService.addAttachments({
-        resource: MODELS.FLEET,
-        resourceId: fleet._id,
-        files: attachmentPayload.documents,
-        uploadedBy: attachmentPayload.uploadedBy,
-      });
+    const attachmentTypes = ["documents", "images"];
 
-      updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
-    }
-
-    if (attachmentPayload?.images?.length) {
-      await attachmentService.addAttachments({
-        resource: MODELS.FLEET,
-        resourceId: fleet._id,
-        files: attachmentPayload.images,
-        uploadedBy: attachmentPayload.uploadedBy,
-      });
-
-      updatePayload.images = attachmentPayload.images.map((image) => image.path);
+    for (const attachmentType of attachmentTypes) {
+      if (attachmentPayload?.[attachmentType]?.length) {
+        await attachmentHelpers.buildAttachmentUpdate({
+          update: updatePayload,
+          field: attachmentType,
+          resource: MODELS.FLEET,
+          resourceId: fleet._id,
+          files: attachmentPayload[attachmentType],
+          uploadedBy: attachmentPayload.uploadedBy,
+        });
+      }
     }
 
     if (!Object.keys(updatePayload).length) return fleet;
@@ -123,14 +117,9 @@ exports.createFleet = async (payload, attachmentPayload) => {
 exports.updateFleet = async (payload, attachmentPayload) => {
   try {
     const validatedPayload = joi.validate(payload, joiSchema.updateFleet);
-    console.log("Validated Payload => ", validatedPayload);
 
     const existingFleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.id);
     const updatePayload = {};
-
-    if (validatedPayload.company && validatedPayload.company !== String(existingFleet?.company)) {
-      updatePayload.company = validatedPayload.company;
-    }
 
     if (validatedPayload.make && validatedPayload.make !== String(existingFleet?.make._id)) {
       await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.make);
@@ -190,7 +179,7 @@ exports.updateFleet = async (payload, attachmentPayload) => {
       updatePayload.purchaseAmount = validatedPayload.purchaseAmount;
     }
 
-    if (validatedPayload.purchaseDate && !isSameDay(validatedPayload.purchaseDate, existingFleet.purchaseDate)) {
+    if (validatedPayload.purchaseDate && !validators.isSameDay(validatedPayload.purchaseDate, existingFleet.purchaseDate)) {
       updatePayload.purchaseDate = validatedPayload.purchaseDate;
     }
 
@@ -217,7 +206,7 @@ exports.updateFleet = async (payload, attachmentPayload) => {
       updatePayload.assignedBy = validatedPayload.assignedBy;
     }
 
-    if (validatedPayload.assignedOn && !isSameDay(validatedPayload.assignedOn, existingFleet?.assignedOn)) {
+    if (validatedPayload.assignedOn && !validators.isSameDay(validatedPayload.assignedOn, existingFleet?.assignedOn)) {
       updatePayload.assignedOn = validatedPayload.assignedOn;
     }
 
@@ -238,20 +227,31 @@ exports.updateFleet = async (payload, attachmentPayload) => {
       updatePayload.status = validatedPayload.status;
     }
 
-    if (attachmentPayload.documents || attachmentPayload.images) {
-      await attachmentService.deleteAttachmentsByResource(MODELS.FLEET, existingFleet._id);
+    const updatedAttachments = [
+      {
+        field: "documents",
+        removeLabel: "removedDocuments",
+      },
+      {
+        field: "images",
+        removeLabel: "removedImages",
+      },
+    ];
 
-      await attachmentService.addAttachments({
+    for (const attachment of updatedAttachments) {
+      const updatedFiles = attachmentPayload[attachment.field] || [];
+      const existingFiles = existingMaintenance[attachment.field] || [];
+
+      await attachmentHelpers.buildAttachmentUpdate({
+        update: updatePayload,
+        field: attachment.field,
         resource: MODELS.FLEET,
-        resourceId: existingFleet._id,
-        files: [...(attachmentPayload?.documents || []), ...(attachmentPayload?.images || [])],
-        uploadedBy: attachmentPayload.uploadedBy,
+        resourceId: existingFleet?._id,
+        removedIds: validatedPayload[attachment.removeLabel],
+        files: updatedFiles,
+        uploadedBy: attachmentPayload?.uploadedBy,
+        existingIds: existingFiles.map((attachment) => String(attachment._id)),
       });
-
-      updatePayload.$set = {
-        documents: (attachmentPayload.documents || []).map((document) => document.path),
-        images: (attachmentPayload.images || []).map((image) => image.path),
-      };
     }
 
     if (!Object.keys(updatePayload).length) return existingFleet;
@@ -267,7 +267,12 @@ exports.deleteFleet = async (fleetId) => {
   joi.validate(fleetId, joiSchema.getFleetById);
 
   await fleetValidation.throwErrorIfFleetDoesNotExist(fleetId);
-  await Promise.all([attachmentService.deleteAttachmentsByResource(MODELS.FLEET, fleetId), depreciationRepository.deleteDepreciationByFleetId(fleetId)]);
+
+  await Promise.all([
+    attachmentService.deleteAttachmentsByResource(MODELS.FLEET, fleetId),
+    depreciationRepository.deleteDepreciationByFleetId(fleetId),
+    maintenanceRepository.deleteMaintenanceByFleetId(fleetId),
+  ]);
 
   await fleetRepository.deleteFleetById(fleetId);
 
@@ -280,7 +285,6 @@ exports.exportFleets = async (filters, stream) => {
   const columns = [
     { header: "Purchase Date", key: "purchaseDate" },
     { header: "User", key: "user" },
-    { header: "Company", key: "company" },
     { header: "Make", key: "make" },
     { header: "Model", key: "model" },
     { header: "Year", key: "year" },
@@ -298,9 +302,8 @@ exports.exportFleets = async (filters, stream) => {
   ];
 
   const rows = assets.map((fleet) => ({
-    purchaseDate: formatDate(fleet.purchaseDate),
+    purchaseDate: formatters.formatDate(fleet.purchaseDate),
     user: lodash.startCase(fleet.driverDetails.user.name ?? ""),
-    company: lodash.startCase(fleet.company?.title ?? ""),
     make: lodash.startCase(fleet.make?.title ?? ""),
     model: lodash.startCase(fleet.model?.title ?? ""),
     year: lodash.startCase(fleet.year ?? ""),
@@ -308,10 +311,10 @@ exports.exportFleets = async (filters, stream) => {
     fuelType: lodash.startCase(fleet.fuelType?.title ?? ""),
     transmission: lodash.startCase(fleet.transmission?.title ?? ""),
     color: lodash.startCase(fleet.color ?? ""),
-    purchaseAmount: fleet.purchaseAmount ? formatAmount(fleet.purchaseAmount, "en-PK", { currency: "PKR" }) : null,
+    purchaseAmount: fleet.purchaseAmount ? formatters.formatAmount(fleet.purchaseAmount, "en-PK", { currency: "PKR" }) : null,
     licensePlate: lodash.startCase(fleet.licensePlate ?? ""),
     status: lodash.startCase(fleet.status ?? ""),
-    rent: fleet.rent ? formatAmount(fleet.rent, "en-PK", { currency: "PKR" }) : null,
+    rent: fleet.rent ? formatters.formatAmount(fleet.rent, "en-PK", { currency: "PKR" }) : null,
     initialOdometer: fleet.initialOdometer ?? "-",
     currentOdometer: fleet.currentOdometer ?? "-",
     condition: lodash.startCase(fleet.condition?.title ?? ""),

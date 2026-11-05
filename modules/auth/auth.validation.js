@@ -5,8 +5,7 @@ const Boom = require("@hapi/boom");
 const userRepository = require("../user/user.repository");
 
 // Constants
-const message = require("../../constants/MESSAGE");
-
+const { MESSAGE: message } = require("../../common/constants");
 
 exports.throwErrorIfUserEmailDoesNotExist = async (userEmail) => {
   const user = await userRepository.getUserByEmail(userEmail);
@@ -29,5 +28,13 @@ exports.throwErrorIfPasswordIncorrect = async (plainPassword, hashedPassword) =>
 
   if (!match) {
     throw Boom.badRequest(message.error.auth.invalidCredentials);
+  }
+};
+
+exports.throwErrorIfUserEmailIsVerified = async (userId) => {
+  const user = await userRepository.getUserById(userId);
+
+  if (user.isEmailVerified) {
+    throw Boom.badRequest(message.error.auth.emailVerified);
   }
 };

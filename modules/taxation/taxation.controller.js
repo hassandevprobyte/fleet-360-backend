@@ -50,12 +50,12 @@ exports.createTaxation = asyncHandler(async (req, res) => {
     filingDate: req.body.filingDate,
     amount: req.body.amount,
     notes: req.body.notes,
-    // createdBy: req.user._id,
+    createdBy: req.context?.user?._id,
   };
 
   const attachmentPayload = {
     documents: req.files?.documents,
-    // uploadedBy: req.user._id,
+    uploadedBy: req.context?.user?._id,
   };
 
   const data = await taxationService.createTaxation(taxationPayload, attachmentPayload);
@@ -81,7 +81,7 @@ exports.updateTaxation = asyncHandler(async (req, res) => {
 
   const attachmentPayload = {
     documents: req.files?.documents,
-    // uploadedBy: req.user._id,
+    uploadedBy: req.context?.user?._id,
   };
 
   const data = await taxationService.updateTaxation(payload, attachmentPayload);

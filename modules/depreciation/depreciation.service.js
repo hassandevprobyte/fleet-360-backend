@@ -11,7 +11,7 @@ const depreciationValidation = require("./depreciation.validation");
 const depreciationHelpers = require("./depreciation.helper");
 
 // Utilities
-const isSameDay = require("../../utils/isSameDay");
+const validators = require("../../common/validators");
 
 exports.getAllDepreciations = async (filters) => {
   return depreciationRepository.getAllDepreciations(filters);
@@ -89,7 +89,7 @@ exports.updateDepreciation = async (payload) => {
     updatePayload.totalExpectedUnits = validatedPayload.totalExpectedUnits;
   }
 
-  if (validatedPayload.startDate && !isSameDay(validatedPayload.startDate, existingDepreciation?.startDate)) {
+  if (validatedPayload.startDate && !validators.isSameDay(validatedPayload.startDate, existingDepreciation?.startDate)) {
     updatePayload.startDate = validatedPayload.startDate;
   }
 

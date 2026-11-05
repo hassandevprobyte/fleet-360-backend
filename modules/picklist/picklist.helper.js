@@ -3,13 +3,12 @@ const Boom = require("@hapi/boom");
 // Repositories
 const picklistRepository = require("./picklist.repository");
 
-// Constants
-const message = require("../../constants/MESSAGE");
+const { PICKLIST } = require("../../common/constants");
 
 exports.resolveContext = ({ scope, resource, field, parentPicklist = null }) => {
   const base = { scope, field, parentPicklist };
 
-  if (scope === SCOPE.RESOURCE) {
+  if (scope === PICKLIST.SCOPE.RESOURCE) {
     base.resource = resource;
   }
 

@@ -1,18 +1,15 @@
-const Joi = require("joi");
-const { objectId } = require("../../config");
+const Joi = require("../../config/joi");
 
 // Constants
-const ENUMS = require("../../constants/ENUMS");
+const { STATUSES } = require("../../common/constants");
 
-exports.getInsuranceById = objectId.required();
+exports.getInsuranceById = Joi.objectId().required();
 
 exports.baseSchema = Joi.object({
-  fleet: objectId,
+  fleet: Joi.objectId(),
   policyNumber: Joi.string().trim(),
-  provider: objectId,
-  status: Joi.string()
-    .valid(...Object.values(ENUMS.INSURANCE.STATUSES))
-    .default(ENUMS.INSURANCE.STATUSES.ACTIVE),
+  provider: Joi.objectId(),
+  status: Joi.string().valid(...Object.values(STATUSES.INSURANCE)),
   startDate: Joi.date(),
   endDate: Joi.date().greater(Joi.ref("startDate")),
   cancellationDate: Joi.date(),
@@ -20,13 +17,15 @@ exports.baseSchema = Joi.object({
   premium: Joi.number().min(0),
   coverage: Joi.number().min(0),
   notes: Joi.string().trim().empty(""),
-  createdBy: objectId,
+  createdBy: Joi.objectId(),
 });
 
-exports.createInsurance = exports.baseSchema.fork(["fleet", "policyNumber", "provider", "status", "startDate", "endDate", "premium", "coverage"], (schema) => schema.required());
+exports.createInsurance = exports.baseSchema
+  .fork(["fleet", "policyNumber", "provider", "status", "startDate", "endDate", "premium", "coverage"], (schema) => schema.required())
+  .fork("status", (schema) => schema.default(STATUSES.INSURANCE.ACTIVE));
 
 exports.updateInsurance = exports.baseSchema
   .append({
-    id: objectId.required(),
+    id: Joi.objectId().required(),
   })
   .fork("createdBy", (schema) => schema.strip());

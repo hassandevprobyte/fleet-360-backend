@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
 
 // Constants
-const MODELS = require("../../constants/MODELS");
-const ENUMS = require("../../constants/ENUMS");
+const { MODELS, STATUSES } = require("../../common/constants");
 
 const checklistItemSchema = {
   item: {
@@ -19,9 +18,10 @@ const checklistItemSchema = {
 
 const schema = new mongoose.Schema(
   {
-    company: {
+    workspace: {
       type: mongoose.Schema.Types.ObjectId,
-      index: true,
+      ref: MODELS.WORKSPACE,
+      required: [true, "workspace is required"],
     },
     fleet: {
       type: mongoose.Schema.Types.ObjectId,
@@ -44,8 +44,8 @@ const schema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: Object.values(ENUMS.MAINTENANCE.STATUSES),
-      default: ENUMS.MAINTENANCE.STATUSES.INITIATED,
+      enum: Object.values(STATUSES.MAINTENANCE),
+      default: STATUSES.MAINTENANCE.INITIATED,
     },
     startDate: {
       type: Date,
@@ -89,7 +89,6 @@ schema.index({
 });
 
 schema.index({
-  company: 1,
   status: 1,
 });
 

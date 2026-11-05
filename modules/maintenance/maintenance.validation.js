@@ -4,7 +4,7 @@ const Boom = require("@hapi/boom");
 const maintenanceRepository = require("./maintenance.repository");
 
 // Constants
-const message = require("../../constants/MESSAGE");
+const { MESSAGE: message } = require("../../common/constants");
 
 exports.throwErrorIfMaintenanceDoesNotExist = async (maintenanceId) => {
   const maintenance = await maintenanceRepository.getMaintenanceById(maintenanceId);

@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const attachmentRepository = require("./attachment.repository");
 
 // Constants
-const message = require("../../constants/MESSAGE");
+const { MESSAGE: message } = require("../../common/constants");
 
 exports.throwErrorIfAttachmentDoesNotExist = async (attachmentId) => {
   const attachment = await attachmentRepository.getAttachmentById(attachmentId);
@@ -29,4 +29,14 @@ exports.throwErrorIfResourceDoesNotExist = async (resource, resourceId) => {
   if (!exists) {
     throw Boom.conflict(message.error.attachment.resourceNotFound(resource));
   }
+};
+
+exports.throwErrorIfAnyAttachmentDoesNotExist = async (attachmentIds) => {
+  const attachments = await attachmentRepository.getAttachmentsByIds(attachmentIds);
+
+  if (attachments.length !== attachmentIds.length) {
+    throw Boom.notFound(message.error.attachment.notFound);
+  }
+
+  return attachments;
 };

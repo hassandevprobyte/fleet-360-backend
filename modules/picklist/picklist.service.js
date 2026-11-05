@@ -12,7 +12,7 @@ const picklistValidation = require("./picklist.validation");
 const picklistHelpers = require("./picklist.helper");
 
 // Constants
-const { SCOPE } = require("../../constants/PICKLIST");
+const { PICKLIST } = require("../../common/constants");
 
 exports.getAllPicklists = async (filters) => {
   return picklistRepository.getAllPicklists(filters);
@@ -24,7 +24,7 @@ exports.getPicklistCategories = async () => {
   const categories = [
     ...new Map(
       picklists.map((picklist) => {
-        const key = picklist.scope === SCOPE.GLOBAL ? picklist.field : `${picklist.resource}.${picklist.field}`;
+        const key = picklist.scope === PICKLIST.SCOPE.GLOBAL ? picklist.field : `${picklist.resource}.${picklist.field}`;
 
         return [
           key,
@@ -67,7 +67,7 @@ exports.createPicklist = async (payload) => {
 
   validatedPayload.value = validatedPayload.title.toLowerCase();
 
-  if (validatedPayload.scope === SCOPE.GLOBAL) {
+  if (validatedPayload.scope === PICKLIST.SCOPE.GLOBAL) {
     delete validatedPayload.resource;
   }
 
@@ -139,12 +139,12 @@ exports.updatePicklist = async (payload) => {
   if (validatedPayload.scope && validatedPayload.scope !== existingPicklist.scope) {
     updatePayload.scope = validatedPayload.scope;
 
-    if (updatePayload.scope === SCOPE.GLOBAL) {
+    if (updatePayload.scope === PICKLIST.SCOPE.GLOBAL) {
       updatePayload.$unset = { resource: "" };
     }
   }
 
-  if (validatedPayload.resource && validatedPayload.resource !== existingPicklist.resource && updatedScope === SCOPE.RESOURCE) {
+  if (validatedPayload.resource && validatedPayload.resource !== existingPicklist.resource && updatedScope === PICKLIST.SCOPE.RESOURCE) {
     updatePayload.resource = validatedPayload.resource;
   }
 

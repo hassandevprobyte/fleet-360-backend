@@ -8,9 +8,12 @@ const authController = require("./auth.controller");
 // Middlewares
 const protect = require("../../middleware/authMiddleware");
 
+router.post("/signup", rateLimiter, authController.signup);
 router.post("/login", rateLimiter, authController.login);
 router.get("/refresh", rateLimiter, authController.refresh);
 router.post("/logout", rateLimiter, authController.logout);
+router.post("/verifyEmail", rateLimiter, protect, authController.verifyEmail);
+router.post("/resendOtp", rateLimiter, protect, authController.resendOtp);
 router.patch("/changePassword", rateLimiter, protect, authController.changePassword);
 
 module.exports = router;

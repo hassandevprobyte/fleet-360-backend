@@ -57,7 +57,7 @@ exports.createInsurance = asyncHandler(async (req, res) => {
 
   const attachmentPayload = {
     documents: req.files?.documents,
-    // uploadedBy: req.user.id,
+    uploadedBy: req.context?.user?._id,
   };
 
   const data = await insuranceService.createInsurance(insurancePayload, attachmentPayload);
@@ -86,7 +86,7 @@ exports.updateInsurance = asyncHandler(async (req, res) => {
 
   const attachmentPayload = {
     documents: req.files?.documents,
-    // uploadedBy: req.user.id,
+    uploadedBy: req.context?.user?._id,
   };
 
   const data = await insuranceService.updateInsurance(payload, attachmentPayload);

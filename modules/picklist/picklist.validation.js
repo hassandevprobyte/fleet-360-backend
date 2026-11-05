@@ -5,8 +5,7 @@ const mongoose = require("mongoose");
 const picklistRepository = require("./picklist.repository");
 
 // Constants
-const message = require("../../constants/MESSAGE");
-const { SCOPE, CONFIG } = require("../../constants/PICKLIST");
+const { MESSAGE: message, SCOPE, CONFIG } = require("../../common/constants");
 
 exports.throwErrorIfPicklistDoesNotExist = async (picklistId) => {
   const picklist = await picklistRepository.getPicklistById(picklistId);

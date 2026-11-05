@@ -1,8 +1,7 @@
 const mongoose = require("mongoose");
 
 // Constants
-const MODELS = require("../../constants/MODELS");
-const ENUMS = require("../../constants/ENUMS");
+const { MODELS, STATUSES } = require("../../common/constants");
 
 const driverDetailsSchema = {
   user: {
@@ -19,8 +18,10 @@ const driverDetailsSchema = {
 
 const schema = new mongoose.Schema(
   {
-    company: {
+    workspace: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: MODELS.WORKSPACE,
+      required: [true, "workspace is required"],
     },
     make: {
       type: mongoose.Schema.Types.ObjectId,
@@ -86,8 +87,8 @@ const schema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: Object.values(ENUMS.FLEET.STATUSES),
-      default: ENUMS.FLEET.STATUSES.IN_HOUSE,
+      enum: Object.values(STATUSES.FLEET),
+      default: STATUSES.FLEET.IN_HOUSE,
     },
     condition: {
       type: mongoose.Schema.Types.ObjectId,

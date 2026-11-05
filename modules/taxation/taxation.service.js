@@ -12,12 +12,11 @@ const picklistValidation = require("../picklist/picklist.validation");
 const taxationValidation = require("./taxation.validation");
 
 // Constants
-const MODELS = require("../../constants/MODELS");
+const { MODELS } = require("../../common/constants");
 
 // Utilities
-const isValidDateRange = require("../../utils/isValidDateRange");
-const isSameDay = require("../../utils/isSameDay");
-const removeUploadedFiles = require("../../utils/removeUploadedFiles");
+const validators = require("../../common/validators");
+const removeUploadedFiles = require("../../common/utils/removeUploadedFiles");
 
 const startOfYear = (year) => new Date(Date.UTC(year, 0, 1));
 const endOfYear = (year) => new Date(Date.UTC(year, 11, 31));
@@ -45,10 +44,9 @@ exports.getTaxationById = async (taxationId) => {
 exports.createTaxation = async (payload, attachmentPayload) => {
   try {
     const validatedPayload = joi.validate(payload, joiSchema.createTaxation);
-    isValidDateRange(validatedPayload.startDate, validatedPayload.endDate);
+    validators.isValidDateRange(validatedPayload.startDate, validatedPayload.endDate);
 
-    const fleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
-    validatedPayload.company = fleet.company;
+    await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
 
     if (validatedPayload.jurisdiction) {
       await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.jurisdiction);
@@ -58,7 +56,7 @@ exports.createTaxation = async (payload, attachmentPayload) => {
     validatedPayload.endDate = endOfYear(validatedPayload.endDate);
 
     if (validatedPayload.filingDate) {
-      isValidDateRange(validatedPayload.filingDate);
+      validators.isValidDateRange(validatedPayload.filingDate);
     }
 
     const taxation = await taxationRepository.createTaxation(validatedPayload);
@@ -110,17 +108,17 @@ exports.updateTaxation = async (payload, attachmentPayload) => {
 
     const updatedStartDate = startOfYear(validatedPayload.startDate) || existingTaxation?.startDate;
     const updatedEndDate = endOfYear(validatedPayload.endDate) || existingTaxation?.endDate;
-    isValidDateRange(updatedStartDate, updatedEndDate);
+    validators.isValidDateRange(updatedStartDate, updatedEndDate);
 
-    if (validatedPayload.startDate && !isSameDay(validatedPayload.startDate, existingTaxation?.startDate)) {
+    if (validatedPayload.startDate && !validators.isSameDay(validatedPayload.startDate, existingTaxation?.startDate)) {
       updatePayload.startDate = startOfYear(validatedPayload.startDate);
     }
 
-    if (validatedPayload.endDate && !isSameDay(validatedPayload.endDate, existingTaxation?.endDate)) {
+    if (validatedPayload.endDate && !validators.isSameDay(validatedPayload.endDate, existingTaxation?.endDate)) {
       updatePayload.endDate = endOfYear(validatedPayload.endDate);
     }
 
-    if (validatedPayload.filingDate && !isSameDay(validatedPayload.filingDate, existingTaxation?.filingDate)) {
+    if (validatedPayload.filingDate && !validators.isSameDay(validatedPayload.filingDate, existingTaxation?.filingDate)) {
       updatePayload.filingDate = validatedPayload.filingDate;
     }
 

@@ -1,66 +1,44 @@
-const jwt = require("jsonwebtoken");
+const asyncHandler = require("express-async-handler");
 const Boom = require("@hapi/boom");
+const jwt = require("jsonwebtoken");
 
-// Validations
-const accessValidation = require("../modules/access/access.validation");
-
-// Constants
-const message = require("../constants/MESSAGE");
+// Repositories
+const userValidation = require("../modules/user/user.validation");
 
 // Utilities
-const resolveEffectiveAccess = require("../utils/resolveEffectiveAccess");
-const getSigningKey = require("../utils/getSigningKey");
+const resolveEffectiveAccess = require("../common/utils/resolveEffectiveAccess");
 
-const authenticate = async (req, res, next) => {
+// Constants
+const { MESSAGE: message } = require("../common/constants");
+
+// Environment variables
+const { env } = require("../config");
+
+const protect = asyncHandler(async (req, res, next) => {
+  const accessToken = req.cookies?.accessToken;
+
+  if (!accessToken) {
+    throw Boom.unauthorized(`${message.error.auth.unauthorized}, no token provided`);
+  }
+
+  const [scheme, token] = accessToken.split(" ");
+
+  if (scheme !== "Bearer" || !token) {
+    throw Boom.unauthorized(`${message.error.auth.unauthorized}, invalid authorization header`);
+  }
+
   try {
-    const authHeader = req.cookies?.accessToken;
+    const decoded = jwt.verify(token, env.JWT.ACCESS_TOKEN_SECRET);
 
-    if (!authHeader) {
-      throw Boom.unauthorized("Access token is required");
-    }
-
-    const [scheme, token] = authHeader.split(" ");
-
-    if (scheme !== "Bearer" || !token) {
-      throw Boom.unauthorized("Invalid authorization header");
-    }
-
-    const decoded = await new Promise((resolve, reject) => {
-      jwt.verify(
-        token,
-        getSigningKey,
-        {
-          algorithms: ["RS256"],
-          issuer: "https://auth360.com",
-          audience: "https://auth360.com",
-        },
-        (error, decodedToken) => {
-          if (error) {
-            return reject(error);
-          }
-
-          resolve(decodedToken);
-        },
-      );
-    });
-
-    const data = await accessValidation.throwErrorIfAccessUserDoesNotExist(decoded.sub?.id);
-    const effectiveAccess = resolveEffectiveAccess(data.roles);
-
-    const userPayload = {
-      ...decoded.sub,
-      effectivePermissions: effectiveAccess.effectivePermissions,
-      effectiveScope: effectiveAccess.effectiveScope,
-      indexPath: effectiveAccess.indexPath,
-    };
-
-    req.user = userPayload;
-    // console.log("User => ", req.user);
+    req.context = {};
+    req.context.user = await userValidation.throwErrorIfUserDoesNotExist(decoded.id);
 
     next();
   } catch (error) {
-    return next(error || Boom.unauthorized("Invalid or expired access token"));
-  }
-};
+    console.log(error);
 
-module.exports = authenticate;
+    throw Boom.unauthorized(message.error.auth.unauthorized);
+  }
+});
+
+module.exports = protect;

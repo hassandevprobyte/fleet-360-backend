@@ -1,12 +1,14 @@
 const mongoose = require("mongoose");
 
 // Constants
-const MODELS = require("../../constants/MODELS");
+const { MODELS } = require("../../common/constants");
 
 const schema = new mongoose.Schema(
   {
-    company: {
+    workspace: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: MODELS.WORKSPACE,
+      required: [true, "workspace is required"],
     },
     fleet: {
       type: mongoose.Schema.Types.ObjectId,

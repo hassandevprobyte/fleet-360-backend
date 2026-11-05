@@ -15,11 +15,11 @@ const maintenanceValidation = require("./maintenance.validation");
 const picklistValidation = require("../picklist/picklist.validation");
 
 // Constants
-const MODELS = require("../../constants/MODELS");
+const { MODELS } = require("../../common/constants");
 
 // Utilities
-const isValidDateRange = require("../../utils/isValidDateRange");
-const removeUploadedFiles = require("../../utils/removeUploadedFiles");
+const validators = require("../../common/validators");
+const removeUploadedFiles = require("../../common/utils/removeUploadedFiles");
 
 exports.getAllMaintenance = async (filters) => {
   return maintenanceRepository.getAllMaintenance(filters);
@@ -48,8 +48,7 @@ exports.createMaintenance = async (payload, attachmentPayload) => {
   try {
     const validatedPayload = joi.validate(payload, joiSchema.createMaintenance);
 
-    const fleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
-    validatedPayload.company = fleet.company;
+    await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.type);
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.vendor);
 
@@ -150,7 +149,7 @@ exports.updateMaintenance = async (payload, attachmentPayload) => {
 
     const updatedStartDate = validatedPayload.startDate || existingMaintenance?.startDate;
     const updatedEndDate = validatedPayload.endDate || existingMaintenance?.endDate;
-    isValidDateRange(updatedStartDate, updatedEndDate);
+    validators.isValidDateRange(updatedStartDate, updatedEndDate);
 
     if (validatedPayload.odometer && validatedPayload.odometer !== existingMaintenance?.odometer) {
       updatePayload.odometer = validatedPayload.odometer;

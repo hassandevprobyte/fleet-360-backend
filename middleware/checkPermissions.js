@@ -1,26 +1,32 @@
 const Boom = require("@hapi/boom");
 
 // Constants
-const message = require("../constants/MESSAGE");
-const METHOD_TO_ACTION = {
+const { MESSAGE: message, ROLES } = require("../common/constants");
+
+const METHOD_TO_ACTION = Object.freeze({
   GET: "read",
   POST: "create",
   PUT: "update",
   PATCH: "update",
   DELETE: "delete",
-};
+});
 
 const checkPermissions = (resource) => (req, res, next) => {
-  const { user } = req;
+  const { user, permissions = [] } = req.context || {};
 
-  if (!user?.effectivePermissions) {
+  if (user.platformRole === ROLES.PLATFORM_ROLES.SUPER_ADMIN) {
+    return next();
+  }
+
+  const action = METHOD_TO_ACTION[req.method];
+
+  if (!action) {
     throw Boom.unauthorized(message.error.auth.unauthorized);
   }
 
-  const permission = user.effectivePermissions.find((p) => p.resource.toLowerCase() === resource.toLowerCase());
-  const action = METHOD_TO_ACTION[req.method.toUpperCase()];
+  const requiredPermission = `${resource.toLowerCase()}:${action}`;
 
-  if (permission && permission.actions.includes(action)) {
+  if (permissions.includes(requiredPermission)) {
     return next();
   }
 

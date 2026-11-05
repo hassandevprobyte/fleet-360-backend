@@ -1,43 +1,33 @@
-// Models
-const Role = require("../modules/role/role.model");
-const Access = require("../modules/access/access.model");
-const Picklist = require("../modules/picklist/picklist.model");
+const bcrypt = require("bcrypt");
 
-// Services
-const roleService = require("../modules/role/role.service");
+// Models
+const Picklist = require("../modules/picklist/picklist.model");
+const User = require("../modules/user/user.model");
 
 // Constants
-const DEFAULTS = require("../constants/DEFAULTS");
-const SCOPE = require("../constants/SCOPE");
+const { DEFAULTS, ROLES } = require("../common/constants");
 
 const SUPER_ADMIN = {
-  role: "super admin",
-  userId: "6aa026cba7a08805dfef012b",
+  title: "super admin",
+  email: "superadmin@fleet360.com",
+  defaultPassword: "Abcd1234",
+  platformRole: ROLES.PLATFORM_ROLES.SUPER_ADMIN,
 };
 
 exports.seedSuperAdmin = async () => {
   try {
-    const role = await Role.findOneAndUpdate(
-      { title: SUPER_ADMIN.role },
-      {
-        $setOnInsert: {
-          title: SUPER_ADMIN.role,
-          scope: SCOPE.ALL,
-          indexPath: "/",
-          permissions: roleService.getAllResources(),
-        },
-      },
-      {
-        upsert: true,
-        returnDocument: "after",
-      },
-    );
-
-    await Access.findOneAndUpdate(
-      { user: SUPER_ADMIN.userId },
+    await User.findOneAndUpdate(
+      { email: SUPER_ADMIN.email },
       {
         $set: {
-          roles: [role._id],
+          permissions: [],
+        },
+        $setOnInsert: {
+          name: SUPER_ADMIN.title,
+          email: SUPER_ADMIN.email,
+          password: await bcrypt.hash(SUPER_ADMIN.defaultPassword, 10),
+          platformRole: SUPER_ADMIN.platformRole,
+          isActive: true,
         },
       },
       {
@@ -47,6 +37,7 @@ exports.seedSuperAdmin = async () => {
     );
   } catch (error) {
     console.error("Error seeding super admin:", error);
+
     throw error;
   }
 };
