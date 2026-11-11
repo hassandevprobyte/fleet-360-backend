@@ -11,6 +11,9 @@ const workspaceValidation = require("./workspace.validation");
 // Helpers
 const workspaceHelpers = require("./workspace.helper");
 
+// Environment Variables
+const { env } = require("../../config");
+
 exports.getAllWorkspaces = async (filters) => {
   return workspaceRepository.getAllWorkspaces(filters);
 };
@@ -34,12 +37,18 @@ exports.getWorkspaceById = async (workspaceId) => {
   return workspaceValidation.throwErrorIfWorkspaceDoesNotExist(workspaceId);
 };
 
+exports.getWorkspaceBySlug = async (slug) => {
+  joi.validate(slug, joiSchema.getWorkspaceBySlug);
+
+  return workspaceValidation.throwErrorIfWorkspaceSlugDoesNotExist(slug);
+};
+
 exports.createWorkspace = async (payload) => {
   const validatedPayload = joi.validate(payload, joiSchema.createWorkspace);
 
   await workspaceValidation.throwErrorIfWorkspaceUserExists(validatedPayload.user);
 
-  validatedPayload.slug = workspaceHelpers.generateWorkspaceSlug(10);
+  validatedPayload.slug = workspaceHelpers.generateWorkspaceSlug(env.WORKSPACE.SLUG_LENGTH);
 
   return workspaceRepository.createWorkspace(validatedPayload);
 };
@@ -56,10 +65,6 @@ exports.updateWorkspace = async (payload) => {
 
   if (validatedPayload.description && validatedPayload.description !== existingWorkspace?.description) {
     updatePayload.description = validatedPayload.description;
-  }
-
-  if (validatedPayload.slug && validatedPayload.slug !== existingWorkspace?.slug) {
-    updatePayload.slug = validatedPayload.slug;
   }
 
   if (validatedPayload.color && validatedPayload.color !== existingWorkspace?.color) {
@@ -83,6 +88,41 @@ exports.updateWorkspace = async (payload) => {
   return workspaceRepository.updateWorkspaceById(validatedPayload.id, updatePayload);
 };
 
+exports.updateWorkspaceBySlug = async (payload) => {
+  const validatedPayload = joi.validate(payload, joiSchema.updateWorkspaceBySlug);
+
+  const existingWorkspace = await workspaceValidation.throwErrorIfWorkspaceSlugDoesNotExist(validatedPayload.slug);
+  const updatePayload = {};
+
+  if (validatedPayload.title && validatedPayload.title !== existingWorkspace?.title) {
+    updatePayload.title = validatedPayload.title;
+  }
+
+  if (validatedPayload.description && validatedPayload.description !== existingWorkspace?.description) {
+    updatePayload.description = validatedPayload.description;
+  }
+
+  if (validatedPayload.color && validatedPayload.color !== existingWorkspace?.color) {
+    updatePayload.color = validatedPayload.color;
+  }
+
+  if (validatedPayload.status && validatedPayload.status !== existingWorkspace?.status) {
+    updatePayload.status = validatedPayload.status;
+  }
+
+  if (validatedPayload.members && !lodash.isEqual(validatedPayload.members, existingWorkspace?.members)) {
+    updatePayload.members = validatedPayload.members;
+  }
+
+  if (validatedPayload.settings && !lodash.isEqual(validatedPayload.settings, existingWorkspace?.settings)) {
+    updatePayload.settings = validatedPayload.settings;
+  }
+
+  if (!Object.keys(updatePayload).length) return existingWorkspace;
+
+  return workspaceRepository.updateWorkspaceById(existingWorkspace._id, updatePayload);
+};
+
 exports.deleteWorkspace = async (workspaceId) => {
   joi.validate(workspaceId, joiSchema.getWorkspaceById);
 
@@ -92,3 +132,4 @@ exports.deleteWorkspace = async (workspaceId) => {
 
   return { deletedId: workspaceId };
 };
+

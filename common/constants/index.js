@@ -475,6 +475,7 @@ exports.MESSAGE = Object.freeze({
     workspace: {
       notFound: "Workspace not found",
       alreadyExists: "Workspace already exists",
+      slugExists: "Workspace slug already exists",
     },
   },
 });

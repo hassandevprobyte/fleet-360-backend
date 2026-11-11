@@ -41,3 +41,11 @@ exports.throwErrorIfWorkspaceSlugDoesNotExist = async (slug) => {
 
   return workspace;
 };
+
+exports.throwErrorIfWorkspaceSlugExists = async (slug) => {
+  const workspace = await workspaceRepository.getWorkspaceBySlug(slug);
+
+  if (workspace) {
+    throw Boom.notFound(message.error.workspace.slugExists);
+  }
+};

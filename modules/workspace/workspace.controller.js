@@ -37,6 +37,15 @@ exports.getWorkspaceById = asyncHandler(async (req, res) => {
   res.status(200).json(data);
 });
 
+// @desc    Get workspace by slug
+// @route   GET /api/v1/workspaces/:id
+// @access  Private
+exports.getWorkspaceBySlug = asyncHandler(async (req, res) => {
+  const data = await workspaceService.getWorkspaceBySlug(req.context?.workspace?.slug);
+
+  res.status(200).json(data);
+});
+
 // @desc    Create a new workspace
 // @route   POST /api/v1/workspace
 // @access  Private
@@ -66,7 +75,6 @@ exports.updateWorkspace = asyncHandler(async (req, res) => {
     id: req.params.id,
     title: req.body.title,
     description: req.body.description,
-    slug: req.body.slug,
     color: req.body.color,
     status: req.body.status,
     depreciation: req.body.depreciation,
@@ -75,6 +83,26 @@ exports.updateWorkspace = asyncHandler(async (req, res) => {
   };
 
   const data = await workspaceService.updateWorkspace(payload);
+
+  res.status(200).json(data);
+});
+
+// @desc    Update workspace by slug
+// @route   PATCH /api/v1/workspaces/:id
+// @access  Private
+exports.updateWorkspaceBySlug = asyncHandler(async (req, res) => {
+  const payload = {
+    slug: req.context?.workspace?.slug,
+    title: req.body.title,
+    description: req.body.description,
+    color: req.body.color,
+    status: req.body.status,
+    depreciation: req.body.depreciation,
+    members: req.body.members,
+    settings: req.body.settings,
+  };
+
+  const data = await workspaceService.updateWorkspaceBySlug(payload);
 
   res.status(200).json(data);
 });

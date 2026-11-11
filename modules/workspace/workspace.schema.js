@@ -3,13 +3,17 @@ const Joi = require("../../config/joi");
 // Constants
 const { CURRENCY, DEPRECIATION, STATUSES, TIMEZONE } = require("../../common/constants");
 
+// Environment Variables
+const { env } = require("../../config");
+
 exports.getWorkspaceById = Joi.objectId().required();
+
+exports.getWorkspaceBySlug = Joi.string().trim().length(env.WORKSPACE.SLUG_LENGTH).required();
 
 exports.baseSchema = Joi.object({
   user: Joi.objectId(),
   title: Joi.string().trim().lowercase(),
   description: Joi.string().trim().lowercase(),
-  slug: Joi.string().trim(),
   color: Joi.string().trim(),
   status: Joi.string()
     .trim()
@@ -45,3 +49,5 @@ exports.createWorkspace = exports.baseSchema
   .fork("settings.currency", (schema) => schema.default(CURRENCY.USD));
 
 exports.updateWorkspace = exports.baseSchema.append({ id: Joi.objectId().required() });
+
+exports.updateWorkspaceBySlug = exports.baseSchema.append({ slug: Joi.string().trim().length(env.WORKSPACE.SLUG_LENGTH).required() });

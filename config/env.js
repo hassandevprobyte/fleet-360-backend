@@ -19,6 +19,7 @@ const envSchema = Joi.object({
   OTP_MAX_RESEND_ATTEMPTS: Joi.number().integer().max(3).default(3),
   OTP_EXPIRY_MINUTES: Joi.number().integer().min(1).default(5),
   OTP_COOLDOWN_MINUTES: Joi.number().integer().min(1).default(1),
+  WORKSPACE_SLUG_LENGTH: Joi.number().integer().min(4).default(10),
   SMTP_HOST: Joi.string().required(),
   SMTP_PORT: Joi.number().default(587),
   SMTP_USER: Joi.string().email().required(),
@@ -50,6 +51,9 @@ const env = {
     MAX_RESEND_ATTEMPTS: envVars.OTP_MAX_RESEND_ATTEMPTS,
     EXPIRY_MINUTES: envVars.OTP_EXPIRY_MINUTES,
     COOLDOWN_MINUTES: envVars.OTP_COOLDOWN_MINUTES,
+  },
+  WORKSPACE: {
+    SLUG_LENGTH: envVars.WORKSPACE_SLUG_LENGTH,
   },
   SMTP: {
     HOST: envVars.SMTP_HOST,

@@ -15,7 +15,7 @@ const { MODELS } = require("../common/constants");
 const adminRoutes = [
   { path: "/attachments", resource: MODELS.ATTACHMENT, route: require("./attachment/attachment.route") },
   { path: "/users", resource: MODELS.USER, route: require("./user/user.route") },
-  { path: "/workspaces", resource: MODELS.WORKSPACE, route: require("./workspace/workspace.route") },
+  { path: "/workspaces", resource: MODELS.WORKSPACE, route: require("./workspace/workspace.admin.route") },
 ];
 
 // Workspace routes
