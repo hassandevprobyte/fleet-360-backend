@@ -4,7 +4,7 @@ const depreciationRepository = require("./depreciation.repository");
 // Validations
 const joi = require("../../config");
 const joiSchema = require("./depreciation.schema");
-const fleetValidation = require("../fleet/fleet.validation");
+const vehicleValidation = require("../vehicle/vehicle.validation");
 const depreciationValidation = require("./depreciation.validation");
 
 // Helpers
@@ -40,10 +40,10 @@ exports.getDepreciationById = async (depreciationId) => {
 exports.createDepreciation = async (payload) => {
   const validatedPayload = joi.validate(payload, joiSchema.createDepreciation);
 
-  await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
+  await vehicleValidation.throwErrorIfVehicleDoesNotExist(validatedPayload.vehicle);
   depreciationHelpers.validateDepreciationMethod(validatedPayload);
 
-  await depreciationValidation.throwErrorIfDepreciationFleetExists(validatedPayload.fleet);
+  await depreciationValidation.throwErrorIfDepreciationVehicleExists(validatedPayload.vehicle);
 
   return depreciationRepository.createDepreciation(validatedPayload);
 };
@@ -54,11 +54,11 @@ exports.updateDepreciation = async (payload) => {
   const existingDepreciation = await depreciationValidation.throwErrorIfDepreciationDoesNotExist(validatedPayload.id);
   const updatePayload = {};
 
-  if (validatedPayload.fleet && String(validatedPayload.fleet) !== String(existingDepreciation?.fleet._id)) {
-    await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
-    await depreciationValidation.throwErrorIfDepreciationFleetExists(validatedPayload.fleet);
+  if (validatedPayload.vehicle && String(validatedPayload.vehicle) !== String(existingDepreciation?.vehicle._id)) {
+    await vehicleValidation.throwErrorIfVehicleDoesNotExist(validatedPayload.vehicle);
+    await depreciationValidation.throwErrorIfDepreciationVehicleExists(validatedPayload.vehicle);
 
-    updatePayload.fleet = validatedPayload.fleet;
+    updatePayload.vehicle = validatedPayload.vehicle;
   }
 
   if (validatedPayload.method && validatedPayload.method !== existingDepreciation.method) {
@@ -110,7 +110,7 @@ exports.deleteDepreciation = async (depreciationId) => {
   return { deletedId: depreciationId };
 };
 
-exports.deleteDepreciationByFleetId = async (depreciationId) => {
+exports.deleteDepreciationByVehicleId = async (depreciationId) => {
   joi.validate(depreciationId, joiSchema.getDepreciationById);
 
   await depreciationValidation.throwErrorIfDepreciationDoesNotExist(depreciationId);

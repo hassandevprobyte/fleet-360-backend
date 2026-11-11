@@ -16,8 +16,8 @@ exports.throwErrorIfDepreciationDoesNotExist = async (depreciationId) => {
   return depreciation;
 };
 
-exports.throwErrorIfDepreciationFleetExists = async (assetId) => {
-  const depreciation = await depreciationRepository.getDepreciationByFleetId(assetId);
+exports.throwErrorIfDepreciationVehicleExists = async (assetId) => {
+  const depreciation = await depreciationRepository.getDepreciationByVehicleId(assetId);
 
   if (depreciation) {
     throw Boom.notFound(message.error.depreciation.alreadyExists);

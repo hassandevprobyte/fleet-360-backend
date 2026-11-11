@@ -9,9 +9,13 @@ const insuranceRepository = require("./insurance.repository");
 // Validations
 const joi = require("../../config/joi");
 const joiSchema = require("./insurance.schema");
-const fleetValidation = require("../fleet/fleet.validation");
+const vehicleValidation = require("../vehicle/vehicle.validation");
 const insuranceValidation = require("./insurance.validation");
 const picklistValidation = require("../picklist/picklist.validation");
+const workspaceValidation = require("../workspace/workspace.validation");
+
+// Helpers
+const attachmentHelpers = require("../attachment/attachment.helper");
 
 // Constants
 const { MODELS } = require("../../common/constants");
@@ -48,22 +52,22 @@ exports.createInsurance = async (payload, attachmentPayload) => {
     const validatedPayload = joi.validate(payload, joiSchema.createInsurance);
     validators.isValidDateRange(validatedPayload.startDate, validatedPayload.endDate);
 
-    await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
-
+    await workspaceValidation.throwErrorIfWorkspaceDoesNotExist(validatedPayload.workspace);
+    await vehicleValidation.throwErrorIfVehicleDoesNotExistsInWorkspace(validatedPayload.vehicle, validatedPayload.workspace);
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.provider);
 
     const insurance = await insuranceRepository.createInsurance(validatedPayload);
 
     const updatePayload = {};
     if (attachmentPayload?.documents?.length) {
-      await attachmentService.addAttachments({
+      await attachmentHelpers.buildAttachmentUpdate({
+        update: updatePayload,
+        field: "documents",
         resource: MODELS.INSURANCE,
         resourceId: insurance._id,
-        files: attachmentPayload.documents,
-        uploadedBy: attachmentPayload.uploadedBy,
+        files: attachmentPayload?.documents,
+        uploadedBy: attachmentPayload?.uploadedBy,
       });
-
-      updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
     }
 
     if (!Object.keys(updatePayload).length) return insurance;
@@ -82,9 +86,9 @@ exports.updateInsurance = async (payload, attachmentPayload) => {
     const existingInsurance = await insuranceValidation.throwErrorIfInsuranceDoesNotExist(validatedPayload.id);
     const updatePayload = {};
 
-    if (validatedPayload.fleet && validatedPayload.fleet !== String(existingInsurance?.fleet?._id)) {
-      const fleet = await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
-      updatePayload.fleet = validatedPayload.fleet;
+    if (validatedPayload.vehicle && validatedPayload.vehicle !== String(existingInsurance?.vehicle?._id)) {
+      await vehicleValidation.throwErrorIfVehicleDoesNotExistsInWorkspace(validatedPayload.vehicle, existingInsurance?.workspace?._id);
+      updatePayload.vehicle = validatedPayload.vehicle;
     }
 
     if (validatedPayload.policyNumber && validatedPayload.policyNumber !== existingInsurance?.policyNumber) {
@@ -132,20 +136,16 @@ exports.updateInsurance = async (payload, attachmentPayload) => {
       updatePayload.notes = validatedPayload.notes;
     }
 
-    if (attachmentPayload.documents) {
-      await attachmentService.deleteAttachmentsByResource(MODELS.INSURANCE, existingInsurance._id);
-
-      await attachmentService.addAttachments({
-        resource: MODELS.INSURANCE,
-        resourceId: existingInsurance._id,
-        files: attachmentPayload?.documents,
-        uploadedBy: attachmentPayload.uploadedBy,
-      });
-
-      updatePayload.$set = {
-        documents: (attachmentPayload.documents || []).map((document) => document.path),
-      };
-    }
+    await attachmentHelpers.buildAttachmentUpdate({
+      update: updatePayload,
+      field: "documents",
+      resource: MODELS.INSURANCE,
+      resourceId: existingInsurance?._id,
+      removedIds: validatedPayload.removedDocuments,
+      files: attachmentPayload?.documents,
+      uploadedBy: attachmentPayload?.uploadedBy,
+      existingIds: (existingInsurance?.documents || []).map((attachment) => String(attachment._id)),
+    });
 
     if (!Object.keys(updatePayload).length) return existingInsurance;
 

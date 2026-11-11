@@ -42,7 +42,8 @@ exports.getTaxationById = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createTaxation = asyncHandler(async (req, res) => {
   const taxationPayload = {
-    fleet: req.body.fleet,
+    workspace: req.context?.workspaceId,
+    vehicle: req.body.vehicle,
     challanNumber: req.body.challanNumber,
     jurisdiction: req.body.jurisdiction,
     startDate: req.body.startDate,
@@ -69,7 +70,7 @@ exports.createTaxation = asyncHandler(async (req, res) => {
 exports.updateTaxation = asyncHandler(async (req, res) => {
   const payload = {
     id: req.params.id,
-    fleet: req.body.fleet,
+    vehicle: req.body.vehicle,
     challanNumber: req.body.challanNumber,
     jurisdiction: req.body.jurisdiction,
     startDate: req.body.startDate,
@@ -77,6 +78,7 @@ exports.updateTaxation = asyncHandler(async (req, res) => {
     filingDate: req.body.filingDate,
     amount: req.body.amount,
     notes: req.body.notes,
+    removedDocuments: req.body.removedDocuments,
   };
 
   const attachmentPayload = {

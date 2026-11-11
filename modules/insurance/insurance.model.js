@@ -10,10 +10,10 @@ const schema = new mongoose.Schema(
       ref: MODELS.WORKSPACE,
       required: [true, "workspace is required"],
     },
-    fleet: {
+    vehicle: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: MODELS.FLEET,
-      required: [true, "fleet is required"],
+      ref: MODELS.VEHICLE,
+      required: [true, "vehicle is required"],
     },
     policyNumber: {
       type: String,
@@ -61,10 +61,16 @@ const schema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: MODELS.USER,
+      required: [true, "create by is required"],
     },
-    documents: {
-      type: [String],
-    },
+    documents: [
+      {
+        _id: false,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: MODELS.ATTACHMENT,
+      },
+    ],
   },
   {
     timestamps: true,

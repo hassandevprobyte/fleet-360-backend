@@ -35,8 +35,7 @@ app.use(pagination);
 
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use("/api/v1/auth", require("./modules/auth/auth.route"));
-app.use("/api/v1/admin", require("./modules/adminRoutes"));
-app.use("/api/v1/:slug", require("./modules/workspaceRoutes"));
+app.use("/api/v1", require("./modules"));
 
 app.use((req, res) => {
   res.status(404).json({

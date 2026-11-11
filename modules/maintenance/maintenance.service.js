@@ -4,15 +4,19 @@ const lodash = require("lodash");
 const attachmentService = require("../attachment/attachment.service");
 
 // Repositories
-const fleetRepository = require("../fleet/fleet.repository");
+const vehicleRepository = require("../vehicle/vehicle.repository");
 const maintenanceRepository = require("./maintenance.repository");
 
 // Validations
-const joi = require("../../config");
+const joi = require("../../config/joi");
 const joiSchema = require("./maintenance.schema");
-const fleetValidation = require("../fleet/fleet.validation");
+const vehicleValidation = require("../vehicle/vehicle.validation");
 const maintenanceValidation = require("./maintenance.validation");
 const picklistValidation = require("../picklist/picklist.validation");
+const workspaceValidation = require("../workspace/workspace.validation");
+
+// Helpers
+const attachmentHelpers = require("../attachment/attachment.helper");
 
 // Constants
 const { MODELS } = require("../../common/constants");
@@ -48,7 +52,8 @@ exports.createMaintenance = async (payload, attachmentPayload) => {
   try {
     const validatedPayload = joi.validate(payload, joiSchema.createMaintenance);
 
-    await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
+    await workspaceValidation.throwErrorIfWorkspaceDoesNotExist(validatedPayload.workspace);
+    await vehicleValidation.throwErrorIfVehicleDoesNotExistsInWorkspace(validatedPayload.vehicle, validatedPayload.workspace);
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.type);
     await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.vendor);
 
@@ -76,26 +81,19 @@ exports.createMaintenance = async (payload, attachmentPayload) => {
     const maintenance = await maintenanceRepository.createMaintenance(validatedPayload);
 
     const updatePayload = {};
-    if (attachmentPayload?.conditionBefore?.length) {
-      await attachmentService.addAttachments({
-        resource: MODELS.MAINTENANCE,
-        resourceId: maintenance._id,
-        files: attachmentPayload.conditionBefore,
-        uploadedBy: attachmentPayload.uploadedBy,
-      });
+    const attachmentTypes = ["beforeImages", "afterImages"];
 
-      updatePayload.conditionBefore = attachmentPayload.conditionBefore.map((file) => file.path);
-    }
-
-    if (attachmentPayload?.conditionAfter?.length) {
-      await attachmentService.addAttachments({
-        resource: MODELS.MAINTENANCE,
-        resourceId: maintenance._id,
-        files: attachmentPayload.conditionAfter,
-        uploadedBy: attachmentPayload.uploadedBy,
-      });
-
-      updatePayload.conditionAfter = attachmentPayload.conditionAfter.map((file) => file.path);
+    for (const attachmentType of attachmentTypes) {
+      if (attachmentPayload?.[attachmentType]?.length) {
+        await attachmentHelpers.buildAttachmentUpdate({
+          update: updatePayload,
+          field: attachmentType,
+          resource: MODELS.MAINTENANCE,
+          resourceId: maintenance._id,
+          files: attachmentPayload[attachmentType],
+          uploadedBy: attachmentPayload.uploadedBy,
+        });
+      }
     }
 
     if (!Object.keys(updatePayload).length) return maintenance;
@@ -114,9 +112,9 @@ exports.updateMaintenance = async (payload, attachmentPayload) => {
     const existingMaintenance = await maintenanceValidation.throwErrorIfMaintenanceDoesNotExist(validatedPayload.id);
     const updatePayload = {};
 
-    if (validatedPayload.fleet && validatedPayload.fleet !== String(existingMaintenance?.fleet._id)) {
-      await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
-      updatePayload.fleet = validatedPayload.fleet;
+    if (validatedPayload.vehicle && validatedPayload.vehicle !== String(existingMaintenance?.vehicle._id)) {
+      await vehicleValidation.throwErrorIfVehicleDoesNotExistsInWorkspace(validatedPayload.vehicle, existingMaintenance?.workspace?._id);
+      updatePayload.vehicle = validatedPayload.vehicle;
     }
 
     if (validatedPayload.type && validatedPayload.type !== String(existingMaintenance?.type._id)) {
@@ -178,29 +176,40 @@ exports.updateMaintenance = async (payload, attachmentPayload) => {
       updatePayload.checklist = validatedPayload.checklist;
     }
 
-    if (attachmentPayload.conditionBefore || attachmentPayload.conditionAfter) {
-      await attachmentService.deleteAttachmentsByResource(MODELS.MAINTENANCE, existingMaintenance._id);
+    const updatedAttachments = [
+      {
+        field: "beforeImages",
+        removeLabel: "removedBeforeImages",
+      },
+      {
+        field: "afterImages",
+        removeLabel: "removedAfterImages",
+      },
+    ];
 
-      await attachmentService.addAttachments({
+    for (const attachment of updatedAttachments) {
+      const updatedFiles = attachmentPayload[attachment.field] || [];
+      const existingFiles = existingMaintenance[attachment.field] || [];
+
+      await attachmentHelpers.buildAttachmentUpdate({
+        update: updatePayload,
+        field: attachment.field,
         resource: MODELS.MAINTENANCE,
-        resourceId: existingMaintenance._id,
-        files: [...(attachmentPayload?.conditionBefore || []), ...(attachmentPayload?.conditionAfter || [])],
-        uploadedBy: attachmentPayload.uploadedBy,
+        resourceId: existingMaintenance?._id,
+        removedIds: validatedPayload[attachment.removeLabel],
+        files: updatedFiles,
+        uploadedBy: attachmentPayload?.uploadedBy,
+        existingIds: existingFiles.map((attachment) => String(attachment._id)),
       });
-
-      updatePayload.$set = {
-        conditionBefore: (attachmentPayload.conditionBefore || []).map((image) => image.path),
-        conditionAfter: (attachmentPayload.conditionAfter || []).map((image) => image.path),
-      };
     }
 
     if (!Object.keys(updatePayload).length) return existingMaintenance;
 
-    if (updatePayload.odometer || updatePayload.fleet) {
-      const fleetId = updatePayload.fleet || String(existingMaintenance?.fleet._id);
+    if (updatePayload.odometer || updatePayload.vehicle) {
+      const vehicleId = updatePayload.vehicle || String(existingMaintenance?.vehicle._id);
       const newOdometer = updatePayload.odometer || existingMaintenance?.odometer;
 
-      await fleetRepository.updateFleetById(fleetId, { currentOdometer: newOdometer });
+      await vehicleRepository.updateVehicleById(vehicleId, { currentOdometer: newOdometer });
     }
 
     return maintenanceRepository.updateMaintenanceById(validatedPayload.id, updatePayload);

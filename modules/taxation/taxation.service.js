@@ -5,11 +5,15 @@ const attachmentService = require("../attachment/attachment.service");
 const taxationRepository = require("./taxation.repository");
 
 // Validations
-const joi = require("../../config");
+const joi = require("../../config/joi");
 const joiSchema = require("./taxation.schema");
-const fleetValidation = require("../fleet/fleet.validation");
+const vehicleValidation = require("../vehicle/vehicle.validation");
 const picklistValidation = require("../picklist/picklist.validation");
 const taxationValidation = require("./taxation.validation");
+const workspaceValidation = require("../workspace/workspace.validation");
+
+// Helpers
+const attachmentHelpers = require("../attachment/attachment.helper");
 
 // Constants
 const { MODELS } = require("../../common/constants");
@@ -46,7 +50,8 @@ exports.createTaxation = async (payload, attachmentPayload) => {
     const validatedPayload = joi.validate(payload, joiSchema.createTaxation);
     validators.isValidDateRange(validatedPayload.startDate, validatedPayload.endDate);
 
-    await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
+    await workspaceValidation.throwErrorIfWorkspaceDoesNotExist(validatedPayload.workspace);
+    await vehicleValidation.throwErrorIfVehicleDoesNotExistsInWorkspace(validatedPayload.vehicle, validatedPayload.workspace);
 
     if (validatedPayload.jurisdiction) {
       await picklistValidation.throwErrorIfPicklistDoesNotExist(validatedPayload.jurisdiction);
@@ -62,16 +67,15 @@ exports.createTaxation = async (payload, attachmentPayload) => {
     const taxation = await taxationRepository.createTaxation(validatedPayload);
 
     const updatePayload = {};
-
     if (attachmentPayload?.documents?.length) {
-      await attachmentService.addAttachments({
+      await attachmentHelpers.buildAttachmentUpdate({
+        update: updatePayload,
+        field: "documents",
         resource: MODELS.TAXATION,
         resourceId: taxation._id,
-        files: attachmentPayload.documents,
-        uploadedBy: attachmentPayload.uploadedBy,
+        files: attachmentPayload?.documents,
+        uploadedBy: attachmentPayload?.uploadedBy,
       });
-
-      updatePayload.documents = attachmentPayload.documents.map((document) => document.path);
     }
 
     if (!Object.keys(updatePayload).length) return taxation;
@@ -90,10 +94,10 @@ exports.updateTaxation = async (payload, attachmentPayload) => {
     const existingTaxation = await taxationValidation.throwErrorIfTaxationDoesNotExist(validatedPayload.id);
     const updatePayload = {};
 
-    if (validatedPayload.fleet && validatedPayload.fleet !== String(existingTaxation?.fleet._id)) {
-      await fleetValidation.throwErrorIfFleetDoesNotExist(validatedPayload.fleet);
+    if (validatedPayload.vehicle && validatedPayload.vehicle !== String(existingTaxation?.vehicle._id)) {
+      await vehicleValidation.throwErrorIfVehicleDoesNotExistsInWorkspace(validatedPayload.vehicle, existingTaxation?.workspace?._id);
 
-      updatePayload.fleet = validatedPayload.fleet;
+      updatePayload.vehicle = validatedPayload.vehicle;
     }
 
     if (validatedPayload.challanNumber && validatedPayload.challanNumber !== existingTaxation?.challanNumber) {
@@ -106,8 +110,9 @@ exports.updateTaxation = async (payload, attachmentPayload) => {
       updatePayload.jurisdiction = validatedPayload.jurisdiction;
     }
 
-    const updatedStartDate = startOfYear(validatedPayload.startDate) || existingTaxation?.startDate;
-    const updatedEndDate = endOfYear(validatedPayload.endDate) || existingTaxation?.endDate;
+    const updatedStartDate = validatedPayload.startDate ? startOfYear(new Date(validatedPayload.startDate).getUTCFullYear()) : existingTaxation?.startDate;
+    const updatedEndDate = validatedPayload.endDate ? endOfYear(new Date(validatedPayload.endDate).getUTCFullYear()) : existingTaxation?.endDate;
+
     validators.isValidDateRange(updatedStartDate, updatedEndDate);
 
     if (validatedPayload.startDate && !validators.isSameDay(validatedPayload.startDate, existingTaxation?.startDate)) {
@@ -130,20 +135,16 @@ exports.updateTaxation = async (payload, attachmentPayload) => {
       updatePayload.notes = validatedPayload.notes;
     }
 
-    if (attachmentPayload.documents) {
-      await attachmentService.deleteAttachmentsByResource(MODELS.TAXATION, existingTaxation._id);
-
-      await attachmentService.addAttachments({
-        resource: MODELS.TAXATION,
-        resourceId: existingTaxation._id,
-        files: attachmentPayload?.documents,
-        uploadedBy: attachmentPayload.uploadedBy,
-      });
-
-      updatePayload.$set = {
-        documents: (attachmentPayload.documents || []).map((image) => image.path),
-      };
-    }
+    await attachmentHelpers.buildAttachmentUpdate({
+      update: updatePayload,
+      field: "documents",
+      resource: MODELS.TAXATION,
+      resourceId: existingTaxation?._id,
+      removedIds: validatedPayload.removedDocuments,
+      files: attachmentPayload?.documents,
+      uploadedBy: attachmentPayload?.uploadedBy,
+      existingIds: (existingTaxation?.documents || []).map((attachment) => String(attachment._id)),
+    });
 
     if (!Object.keys(updatePayload).length) return existingTaxation;
 

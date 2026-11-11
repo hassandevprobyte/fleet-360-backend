@@ -22,7 +22,14 @@ exports.attachAttachmentsToDocuments = async (documents) => {
 };
 
 exports.buildAttachmentUpdate = async ({ update = {}, field, resource, resourceId, removedIds = [], files, uploadedBy, existingIds = [] }) => {
-  let attachmentIds = existingIds.filter((id) => !removedIds.includes(String(id)));
+  const normalizeId = (item) => item?._id ?? item;
+
+  const removedIdSet = new Set(removedIds.filter(Boolean).map(String));
+
+  let attachmentIds = existingIds
+    .map(normalizeId)
+    .filter((id) => id && String(id) !== "undefined" && String(id) !== "null")
+    .filter((id) => !removedIdSet.has(String(id)));
 
   if (removedIds.length) {
     await attachmentService.deleteAttachments(removedIds);
@@ -36,7 +43,7 @@ exports.buildAttachmentUpdate = async ({ update = {}, field, resource, resourceI
       uploadedBy,
     });
 
-    attachmentIds.push(...attachments.map((attachment) => attachment._id));
+    attachmentIds.push(...attachments.map(({ _id }) => _id));
   }
 
   if (removedIds.length || files?.length) {

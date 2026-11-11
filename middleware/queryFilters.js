@@ -4,8 +4,9 @@ const transformQueryParams = require("../common/utils/transformQueryToMongooseSy
 
 const orFilters = {};
 
-const queryFilters = (modelName, extraFields = []) => {
-  return (req, res, next) => {
+const queryFilters =
+  (modelName, extraFields = []) =>
+  (req, res, next) => {
     if (req.method !== "GET") {
       return next();
     }
@@ -25,6 +26,10 @@ const queryFilters = (modelName, extraFields = []) => {
       ["$or", ...extraFields],
       ["$or", "resource", "field"],
     );
+
+    if (req.context?.workspaceId) {
+      filters.workspace = req.context.workspaceId;
+    }
 
     const andConditions = [];
 
@@ -50,6 +55,5 @@ const queryFilters = (modelName, extraFields = []) => {
     // console.dir({ middleware: "queryFilters", queryScope, filters: req.filters }, { depth: null }); // temp
     next();
   };
-};
 
 module.exports = queryFilters;

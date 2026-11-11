@@ -6,7 +6,8 @@ const { STATUSES } = require("../../common/constants");
 exports.getMaintenanceById = Joi.objectId().required();
 
 exports.baseSchema = Joi.object({
-  fleet: Joi.objectId(),
+  workspace: Joi.objectId(),
+  vehicle: Joi.objectId(),
   type: Joi.objectId(),
   priority: Joi.objectId(),
   vendor: Joi.objectId(),
@@ -25,10 +26,14 @@ exports.baseSchema = Joi.object({
   createdBy: Joi.objectId(),
 });
 
-exports.createMaintenance = exports.baseSchema.fork(["fleet", "type"], (schema) => schema.required()).fork("status", (schema) => schema.default(STATUSES.MAINTENANCE.INITIATED));
+exports.createMaintenance = exports.baseSchema
+  .fork(["workspace", "vehicle", "type", "createdBy"], (schema) => schema.required())
+  .fork("status", (schema) => schema.default(STATUSES.MAINTENANCE.INITIATED));
 
 exports.updateMaintenance = exports.baseSchema
   .append({
     id: Joi.objectId().required(),
+    removedBeforeImages: Joi.array().items(Joi.objectId()).unique(),
+    removedAfterImages: Joi.array().items(Joi.objectId()).unique(),
   })
-  .fork("createdBy", (schema) => schema.strip());
+  .fork(["workspace", "createdBy"], (schema) => schema.strip());

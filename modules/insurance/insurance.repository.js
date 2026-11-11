@@ -1,6 +1,6 @@
 const Insurance = require("./insurance.model");
 
-const POPULATION_PIPELINE = [{ path: "fleet" }];
+const POPULATION_PIPELINE = [{ path: "workspace" }, { path: "vehicle" }, { path: "provider" }, { path: "createdBy" }, { path: "documents" }];
 
 exports.getAllInsurance = async (filters) => {
   return Insurance.find(filters).sort({ createdAt: -1 }).populate(POPULATION_PIPELINE).lean();
@@ -18,8 +18,8 @@ exports.getInsuranceById = async (insuranceId) => {
   return Insurance.findById(insuranceId).populate(POPULATION_PIPELINE).lean();
 };
 
-exports.getInsuranceByFleetId = async (fleetId) => {
-  return Insurance.findOne({ fleet: fleetId }).populate(POPULATION_PIPELINE).lean();
+exports.getInsuranceByVehicleId = async (vehicleId) => {
+  return Insurance.findOne({ vehicle: vehicleId }).populate(POPULATION_PIPELINE).lean();
 };
 
 exports.createInsurance = async (payload) => {

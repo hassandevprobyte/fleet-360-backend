@@ -23,10 +23,10 @@ const schema = new mongoose.Schema(
       ref: MODELS.WORKSPACE,
       required: [true, "workspace is required"],
     },
-    fleet: {
+    vehicle: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: MODELS.FLEET,
-      required: [true, "fleet is required"],
+      ref: MODELS.VEHICLE,
+      required: [true, "vehicle is required"],
       index: true,
     },
     type: {
@@ -70,13 +70,23 @@ const schema = new mongoose.Schema(
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: MODELS.PICKLIST,
+      required: [true, "created by is required"],
     },
-    conditionBefore: {
-      type: [String],
-    },
-    conditionAfter: {
-      type: [String],
-    },
+    beforeImages: [
+      {
+        _id: false,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: MODELS.ATTACHMENT,
+      },
+    ],
+    afterImages: [
+      {
+        _id: false,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: MODELS.ATTACHMENT,
+      },
+    ],
   },
   {
     timestamps: true,
@@ -84,7 +94,7 @@ const schema = new mongoose.Schema(
 );
 
 schema.index({
-  fleet: 1,
+  vehicle: 1,
   createdAt: -1,
 });
 
@@ -93,7 +103,7 @@ schema.index({
 });
 
 schema.index({
-  fleet: 1,
+  vehicle: 1,
   status: 1,
   createdAt: -1,
 });

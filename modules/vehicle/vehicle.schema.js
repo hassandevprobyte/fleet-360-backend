@@ -3,7 +3,7 @@ const Joi = require("../../config/joi");
 // Constants
 const { STATUSES } = require("../../common/constants");
 
-exports.getFleetById = Joi.objectId().required();
+exports.getVehicleById = Joi.objectId().required();
 
 const driverDetailsSchema = Joi.object({
   user: Joi.objectId().required(),
@@ -26,7 +26,7 @@ exports.baseSchema = Joi.object({
   rent: Joi.number().min(0),
   initialOdometer: Joi.number().min(0),
   currentOdometer: Joi.number().min(0),
-  status: Joi.string().valid(...Object.values(STATUSES.FLEET)),
+  status: Joi.string().valid(...Object.values(STATUSES.VEHICLE)),
   condition: Joi.objectId(),
   driverDetails: Joi.object({}),
   assignedBy: Joi.objectId(),
@@ -35,7 +35,7 @@ exports.baseSchema = Joi.object({
   createdBy: Joi.objectId(),
 });
 
-exports.createFleet = exports.baseSchema
+exports.createVehicle = exports.baseSchema
   .fork(
     [
       "workspace",
@@ -56,50 +56,44 @@ exports.createFleet = exports.baseSchema
     ],
     (schema) => schema.required(),
   )
-  .fork("status", (schema) => schema.default(STATUSES.FLEET.IN_HOUSE))
+  .fork("status", (schema) => schema.default(STATUSES.VEHICLE.IN_HOUSE))
   .keys({
     driverDetails: Joi.when("status", {
       switch: [
         {
-          is: STATUSES.FLEET.IN_HOUSE,
+          is: STATUSES.VEHICLE.IN_HOUSE,
           then: Joi.forbidden(),
         },
         {
-          is: STATUSES.FLEET.ASSIGNED,
+          is: STATUSES.VEHICLE.ASSIGNED,
           then: driverDetailsSchema.required(),
         },
         {
-          is: STATUSES.FLEET.IN_MAINTENANCE,
+          is: STATUSES.VEHICLE.IN_MAINTENANCE,
           then: driverDetailsSchema.optional(),
         },
       ],
     }),
   });
 
-exports.updateFleet = exports.baseSchema
+exports.updateVehicle = exports.baseSchema
   .append({ id: Joi.objectId().required(), removedDocuments: Joi.array().items(Joi.objectId()).unique(), removedImages: Joi.array().items(Joi.objectId()).unique() })
   .fork("createdBy", (schema) => schema.strip())
   .keys({
     driverDetails: Joi.when("status", {
       switch: [
         {
-          is: STATUSES.FLEET.IN_HOUSE,
+          is: STATUSES.VEHICLE.IN_HOUSE,
           then: Joi.forbidden(),
         },
         {
-          is: STATUSES.FLEET.ASSIGNED,
+          is: STATUSES.VEHICLE.ASSIGNED,
           then: driverDetailsSchema.required(),
         },
         {
-          is: STATUSES.FLEET.IN_MAINTENANCE,
+          is: STATUSES.VEHICLE.IN_MAINTENANCE,
           then: driverDetailsSchema.optional(),
         },
       ],
     }),
   });
-
-exports.getFleetsSummaryByGroup = Joi.object({
-  filters: Joi.object().default({}).optional(),
-  primaryGroup: Joi.string().trim().valid("make", "model", "type", "fuelType", "transmission", "status", "condition").default("make").optional(),
-  secondaryGroup: Joi.string().trim().valid("make", "model", "type", "fuelType", "transmission", "status", "condition").default("model").optional(),
-});

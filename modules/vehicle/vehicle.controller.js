@@ -1,21 +1,22 @@
 const asyncHandler = require("express-async-handler");
 
 // Services
-const fleetService = require("./fleet.service");
+const vehicleService = require("./vehicle.service");
 
-// @desc    Get all fleets
-// @route   GET /api/v1/fleets/all
+// @desc    Get all vehicles
+// @route   GET /api/v1/vehicles/all
 // @access  Private
-exports.getAllFleets = asyncHandler(async (req, res) => {
-  const data = await fleetService.getAllFleets(req.filters);
+exports.getAllVehicles = asyncHandler(async (req, res) => {
+  const data = await vehicleService.getAllVehicles(req.filters);
 
   res.status(200).json(data);
 });
 
-// @desc    Get fleets with pagination
-// @route   GET /api/v1/fleets
+// @desc    Get vehicles with pagination
+// @route   GET /api/v1/vehicles
 // @access  Private
-exports.getFleetsWithPagination = asyncHandler(async (req, res) => {
+exports.getVehiclesWithPagination = asyncHandler(async (req, res) => {
+  console.log(req.filters);
   const payload = {
     filters: req.filters,
     page: req.pagination.page,
@@ -23,40 +24,25 @@ exports.getFleetsWithPagination = asyncHandler(async (req, res) => {
     sort: req.pagination.sort,
   };
 
-  const data = await fleetService.getFleetsWithPagination(payload);
+  const data = await vehicleService.getVehiclesWithPagination(payload);
 
   res.status(200).json(data);
 });
 
-// @desc    Get Fleet by id
-// @route   GET /api/v1/fleets/:id
+// @desc    Get Vehicle by id
+// @route   GET /api/v1/vehicles/:id
 // @access  Private
-exports.getFleetById = asyncHandler(async (req, res) => {
-  const data = await fleetService.getFleetById(req.params.id);
+exports.getVehicleById = asyncHandler(async (req, res) => {
+  const data = await vehicleService.getVehicleById(req.params.id);
 
   res.status(200).json(data);
 });
 
-// @desc    Get fleets summary by group
-// @route   GET /api/v1/fleets/summary/byGroup
+// @desc    Create a new Vehicle
+// @route   POST /api/v1/vehicles
 // @access  Private
-exports.getFleetsSummaryByGroup = asyncHandler(async (req, res) => {
-  const payload = {
-    filters: req.filters,
-    primaryGroup: req.query.primaryGroup,
-    secondaryGroup: req.query.secondaryGroup,
-  };
-
-  const data = await fleetService.getFleetsSummaryByGroup(payload);
-
-  res.status(200).json(data);
-});
-
-// @desc    Create a new Fleet
-// @route   POST /api/v1/fleets
-// @access  Private
-exports.createFleet = asyncHandler(async (req, res) => {
-  const fleetPayload = {
+exports.createVehicle = asyncHandler(async (req, res) => {
+  const vehiclePayload = {
     workspace: req.context?.workspaceId,
     make: req.body.make,
     model: req.body.model,
@@ -85,15 +71,15 @@ exports.createFleet = asyncHandler(async (req, res) => {
     uploadedBy: req.context?.user?._id,
   };
 
-  const data = await fleetService.createFleet(fleetPayload, attachmentPayload);
+  const data = await vehicleService.createVehicle(vehiclePayload, attachmentPayload);
 
   res.status(201).json(data);
 });
 
-// @desc    Update Fleet
-// @route   PATCH /api/v1/fleets/:id
+// @desc    Update Vehicle
+// @route   PATCH /api/v1/vehicles/:id
 // @access  Private
-exports.updateFleet = asyncHandler(async (req, res) => {
+exports.updateVehicle = asyncHandler(async (req, res) => {
   const payload = {
     id: req.params.id,
     make: req.body.make,
@@ -124,29 +110,29 @@ exports.updateFleet = asyncHandler(async (req, res) => {
     uploadedBy: req.context?.user?._id,
   };
 
-  const data = await fleetService.updateFleet(payload, attachmentPayload);
+  const data = await vehicleService.updateVehicle(payload, attachmentPayload);
 
   res.status(200).json(data);
 });
 
-// @desc    Delete Fleet
-// @route   DELETE /api/v1/fleets/:id
+// @desc    Delete Vehicle
+// @route   DELETE /api/v1/vehicles/:id
 // @access  Private
-exports.deleteFleet = asyncHandler(async (req, res) => {
-  const data = await fleetService.deleteFleet(req.params.id);
+exports.deleteVehicle = asyncHandler(async (req, res) => {
+  const data = await vehicleService.deleteVehicle(req.params.id);
 
   res.status(200).json(data);
 });
 
-// @desc    Export Fleet
-// @route   GET /api/v1/fleets/export
+// @desc    Export Vehicle
+// @route   GET /api/v1/vehicles/export
 // @access  Private
-exports.exportFleets = asyncHandler(async (req, res) => {
+exports.exportVehicles = asyncHandler(async (req, res) => {
   const filters = req.filters;
 
   res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  res.setHeader("Content-Disposition", `attachment; filename=fleets_${Date.now()}.xlsx`);
+  res.setHeader("Content-Disposition", `attachment; filename=vehicles_${Date.now()}.xlsx`);
 
-  await fleetService.exportFleets(filters, res);
+  await vehicleService.exportVehicles(filters, res);
 });

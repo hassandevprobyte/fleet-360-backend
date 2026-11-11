@@ -5,9 +5,6 @@ const jwt = require("jsonwebtoken");
 // Repositories
 const userValidation = require("../modules/user/user.validation");
 
-// Utilities
-const resolveEffectiveAccess = require("../common/utils/resolveEffectiveAccess");
-
 // Constants
 const { MESSAGE: message } = require("../common/constants");
 
@@ -30,10 +27,11 @@ const protect = asyncHandler(async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, env.JWT.ACCESS_TOKEN_SECRET);
 
-    req.context = {};
-    req.context.user = await userValidation.throwErrorIfUserDoesNotExist(decoded.id);
+    req.context = {
+      user: await userValidation.throwErrorIfUserDoesNotExist(decoded.id),
+    };
 
-    next();
+    return next();
   } catch (error) {
     console.log(error);
 

@@ -42,7 +42,8 @@ exports.getInsuranceById = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createInsurance = asyncHandler(async (req, res) => {
   const insurancePayload = {
-    fleet: req.body.fleet,
+    workspace: req.context?.workspaceId,
+    vehicle: req.body.vehicle,
     policyNumber: req.body.policyNumber,
     provider: req.body.provider,
     status: req.body.status,
@@ -53,6 +54,7 @@ exports.createInsurance = asyncHandler(async (req, res) => {
     premium: req.body.premium,
     coverage: req.body.coverage,
     notes: req.body.notes,
+    createdBy: req.context?.user?._id,
   };
 
   const attachmentPayload = {
@@ -71,7 +73,7 @@ exports.createInsurance = asyncHandler(async (req, res) => {
 exports.updateInsurance = asyncHandler(async (req, res) => {
   const payload = {
     id: req.params.id,
-    fleet: req.body.fleet,
+    vehicle: req.body.vehicle,
     policyNumber: req.body.policyNumber,
     provider: req.body.provider,
     status: req.body.status,
@@ -82,6 +84,7 @@ exports.updateInsurance = asyncHandler(async (req, res) => {
     premium: req.body.premium,
     coverage: req.body.coverage,
     notes: req.body.notes,
+    removedDocuments: req.body.removedDocuments,
   };
 
   const attachmentPayload = {

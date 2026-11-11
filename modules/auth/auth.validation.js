@@ -3,6 +3,7 @@ const Boom = require("@hapi/boom");
 
 // Repositories
 const userRepository = require("../user/user.repository");
+const workspaceRepository = require("../workspace/workspace.repository");
 
 // Constants
 const { MESSAGE: message } = require("../../common/constants");
@@ -37,4 +38,14 @@ exports.throwErrorIfUserEmailIsVerified = async (userId) => {
   if (user.isEmailVerified) {
     throw Boom.badRequest(message.error.auth.emailVerified);
   }
+};
+
+exports.throwErrorIfUserWorkspaceDoesNotExist = async (userId) => {
+  const workspace = await workspaceRepository.getWorkspaceByUserId(userId);
+
+  if (!workspace) {
+    throw Boom.notFound(message.error.workspace.notFound);
+  }
+
+  return workspace;
 };

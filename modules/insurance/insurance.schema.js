@@ -6,7 +6,8 @@ const { STATUSES } = require("../../common/constants");
 exports.getInsuranceById = Joi.objectId().required();
 
 exports.baseSchema = Joi.object({
-  fleet: Joi.objectId(),
+  workspace: Joi.objectId(),
+  vehicle: Joi.objectId(),
   policyNumber: Joi.string().trim(),
   provider: Joi.objectId(),
   status: Joi.string().valid(...Object.values(STATUSES.INSURANCE)),
@@ -21,11 +22,12 @@ exports.baseSchema = Joi.object({
 });
 
 exports.createInsurance = exports.baseSchema
-  .fork(["fleet", "policyNumber", "provider", "status", "startDate", "endDate", "premium", "coverage"], (schema) => schema.required())
+  .fork(["workspace", "vehicle", "policyNumber", "provider", "status", "startDate", "endDate", "premium", "coverage", "createdBy"], (schema) => schema.required())
   .fork("status", (schema) => schema.default(STATUSES.INSURANCE.ACTIVE));
 
 exports.updateInsurance = exports.baseSchema
   .append({
     id: Joi.objectId().required(),
+    removedDocuments: Joi.array().items(Joi.objectId()).unique(),
   })
-  .fork("createdBy", (schema) => schema.strip());
+  .fork(["workspace", "createdBy"], (schema) => schema.strip());

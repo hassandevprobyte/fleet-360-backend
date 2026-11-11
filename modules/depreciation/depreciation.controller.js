@@ -57,7 +57,7 @@ exports.getDepreciationById = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createDepreciation = asyncHandler(async (req, res) => {
   const payload = {
-    fleet: req.body.fleet,
+    vehicle: req.body.vehicle,
     method: req.body.method,
     salvageValue: req.body.salvageValue,
     usefulLifeMonths: req.body.usefulLifeMonths,
@@ -79,7 +79,7 @@ exports.createDepreciation = asyncHandler(async (req, res) => {
 exports.updateDepreciation = asyncHandler(async (req, res) => {
   const payload = {
     id: req.params.id,
-    fleet: req.body.fleet,
+    vehicle: req.body.vehicle,
     method: req.body.method,
     salvageValue: req.body.salvageValue,
     usefulLifeMonths: req.body.usefulLifeMonths,

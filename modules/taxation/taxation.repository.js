@@ -1,6 +1,6 @@
 const Taxation = require("./taxation.model");
 
-const POPULATION_PIPELINE = [{ path: "fleet" }, { path: "jurisdiction" }];
+const POPULATION_PIPELINE = [{ path: "workspace" }, { path: "vehicle" }, { path: "jurisdiction" }, { path: "createdBy" }, { path: "documents" }];
 
 exports.getAllTaxation = async (filters) => {
   return Taxation.find(filters).sort({ createdAt: -1 }).populate(POPULATION_PIPELINE).lean();
@@ -18,8 +18,8 @@ exports.getTaxationById = async (taxationId) => {
   return Taxation.findById(taxationId).populate(POPULATION_PIPELINE).lean();
 };
 
-exports.getTaxationByFleetId = async (fleetId) => {
-  return Taxation.findOne({ fleet: fleetId }).populate(POPULATION_PIPELINE).lean();
+exports.getTaxationByVehicleId = async (vehicleId) => {
+  return Taxation.findOne({ vehicle: vehicleId }).populate(POPULATION_PIPELINE).lean();
 };
 
 exports.createTaxation = async (payload) => {

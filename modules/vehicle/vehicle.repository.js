@@ -1,20 +1,20 @@
-const Fleet = require("./fleet.model");
+const Vehicle = require("./vehicle.model");
 
 const POPULATION_PIPELINE = [{ path: "make" }, { path: "model" }, { path: "type" }, { path: "fuelType" }, { path: "transmission" }, { path: "status" }, { path: "condition" }];
 
-exports.getAllFleets = async (filters) => {
-  return Fleet.find(filters).sort({ createdAt: -1 }).populate(POPULATION_PIPELINE).lean();
+exports.getAllVehicles = async (filters) => {
+  return Vehicle.find(filters).sort({ createdAt: -1 }).populate(POPULATION_PIPELINE).lean();
 };
 
-exports.getFleetsWithPagination = async (filters, offset, pageSize, sort) => {
-  return Fleet.find(filters).skip(offset).limit(pageSize).sort(sort).populate(POPULATION_PIPELINE).lean();
+exports.getVehiclesWithPagination = async (filters, offset, pageSize, sort) => {
+  return Vehicle.find(filters).skip(offset).limit(pageSize).sort(sort).populate(POPULATION_PIPELINE).lean();
 };
 
-exports.getFleetsCount = async (filters) => {
-  return Fleet.countDocuments(filters);
+exports.getVehiclesCount = async (filters) => {
+  return Vehicle.countDocuments(filters);
 };
 
-exports.getFleetsSummaryByGroup = async (filters, primaryGroup, secondaryGroup) => {
+exports.getVehiclesSummaryByGroup = async (filters, primaryGroup, secondaryGroup) => {
   const matchPipeline = [{ $match: filters }];
 
   const facetPipelines = {
@@ -53,27 +53,31 @@ exports.getFleetsSummaryByGroup = async (filters, primaryGroup, secondaryGroup) 
 
   const aggregationPipeline = [...matchPipeline, { $facet: facetPipelines }, ...projectionPipeline];
 
-  const [result = { primaryGroupWise: [], secondaryGroupWise: [], totalCount: 0, totalPurchaseAmount: 0 }] = await Fleet.aggregate(aggregationPipeline);
+  const [result = { primaryGroupWise: [], secondaryGroupWise: [], totalCount: 0, totalPurchaseAmount: 0 }] = await Vehicle.aggregate(aggregationPipeline);
 
   return result;
 };
 
-exports.getFleetById = async (fleetId) => {
-  return Fleet.findById(fleetId).populate(POPULATION_PIPELINE).lean();
+exports.getVehicleById = async (vehicleId) => {
+  return Vehicle.findById(vehicleId).populate(POPULATION_PIPELINE).lean();
 };
 
-exports.getFleetByLicensePlate = async (licensePlate) => {
-  return Fleet.findOne({ licensePlate });
+exports.getVehicleByIdAndWorkspaceId = async (vehicleId, workspaceId) => {
+  return Vehicle.findOne({ _id: vehicleId, workspace: workspaceId }).populate(POPULATION_PIPELINE).lean();
 };
 
-exports.createFleet = async (payload) => {
-  return Fleet.create(payload);
+exports.getVehicleByLicensePlate = async (licensePlate) => {
+  return Vehicle.findOne({ licensePlate });
 };
 
-exports.updateFleetById = async (fleetId, payload) => {
-  return Fleet.findByIdAndUpdate(fleetId, payload, { returnDocument: "after" });
+exports.createVehicle = async (payload) => {
+  return Vehicle.create(payload);
 };
 
-exports.deleteFleetById = async (fleetId) => {
-  return Fleet.findByIdAndDelete(fleetId);
+exports.updateVehicleById = async (vehicleId, payload) => {
+  return Vehicle.findByIdAndUpdate(vehicleId, payload, { returnDocument: "after" });
+};
+
+exports.deleteVehicleById = async (vehicleId) => {
+  return Vehicle.findByIdAndDelete(vehicleId);
 };

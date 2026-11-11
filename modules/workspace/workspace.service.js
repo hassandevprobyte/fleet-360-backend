@@ -38,7 +38,7 @@ exports.createWorkspace = async (payload) => {
   const validatedPayload = joi.validate(payload, joiSchema.createWorkspace);
 
   await workspaceValidation.throwErrorIfWorkspaceUserExists(validatedPayload.user);
-  
+
   validatedPayload.slug = workspaceHelpers.generateWorkspaceSlug(10);
 
   return workspaceRepository.createWorkspace(validatedPayload);

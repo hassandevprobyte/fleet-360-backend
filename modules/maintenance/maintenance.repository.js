@@ -1,13 +1,17 @@
 const Maintenance = require("./maintenance.model");
 
 const POPULATION_PIPELINE = [
-  { path: "fleet" },
+  { path: "workspace" },
+  { path: "vehicle" },
   { path: "type" },
   { path: "status" },
   { path: "priority" },
   { path: "vendor" },
   { path: "checklist", populate: { path: "item" } },
   { path: "checklist", populate: { path: "condition" } },
+  { path: "createdBy" },
+  { path: "beforeImages" },
+  { path: "afterImages" },
 ];
 
 exports.getAllMaintenance = async (filters) => {
@@ -26,8 +30,8 @@ exports.getMaintenanceById = async (maintenanceId) => {
   return Maintenance.findById(maintenanceId).populate(POPULATION_PIPELINE).lean();
 };
 
-exports.getMaintenanceByFleetId = async (fleetId) => {
-  return Maintenance.findOne({ fleet: fleetId }).populate(POPULATION_PIPELINE).lean();
+exports.getMaintenanceByVehicleId = async (vehicleId) => {
+  return Maintenance.findOne({ vehicle: vehicleId }).populate(POPULATION_PIPELINE).lean();
 };
 
 exports.createMaintenance = async (payload) => {
@@ -42,6 +46,6 @@ exports.deleteMaintenanceById = async (maintenanceId) => {
   return Maintenance.findByIdAndDelete(maintenanceId);
 };
 
-exports.deleteMaintenanceByFleetId = async (fleetId) => {
-  return Maintenance.findOneAndDelete({ fleet: fleetId });
+exports.deleteMaintenanceByVehicleId = async (vehicleId) => {
+  return Maintenance.findOneAndDelete({ vehicle: vehicleId });
 };

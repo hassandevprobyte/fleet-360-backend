@@ -6,7 +6,7 @@ const { DEPRECIATION } = require("../../common/constants");
 exports.getDepreciationById = Joi.objectId().required();
 
 exports.baseSchema = Joi.object({
-  fleet: Joi.objectId(),
+  vehicle: Joi.objectId(),
   method: Joi.string().valid(...Object.values(DEPRECIATION.METHODS).map((method) => method.VALUE)),
   salvageValue: Joi.number().min(0),
   usefulLifeMonths: Joi.number().min(1),
@@ -17,6 +17,6 @@ exports.baseSchema = Joi.object({
   startDate: Joi.date(),
 });
 
-exports.createDepreciation = exports.baseSchema.fork(["fleet", "method", "acquisitionCost", "startDate"], (schema) => schema.required());
+exports.createDepreciation = exports.baseSchema.fork(["vehicle", "method", "acquisitionCost", "startDate"], (schema) => schema.required());
 
 exports.updateDepreciation = exports.baseSchema.append({ id: Joi.objectId().required() });

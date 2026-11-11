@@ -1,7 +1,7 @@
 exports.MODELS = Object.freeze({
   ATTACHMENT: "Attachment",
   DEPRECIATION: "Depreciation",
-  FLEET: "Fleet",
+  VEHICLE: "Vehicle",
   INSURANCE: "Insurance",
   MAINTENANCE: "Maintenance",
   PICKLIST: "Picklist",
@@ -219,7 +219,7 @@ exports.DEFAULTS = Object.freeze({
       acronym: "-",
       preserveTitleFormatting: false,
       scope: exports.PICKLIST.SCOPE.RESOURCE,
-      resource: exports.MODELS.FLEET,
+      resource: exports.MODELS.VEHICLE,
       field: "make",
       color: exports.COLORS.GRAY,
       order: 1,
@@ -233,7 +233,7 @@ exports.DEFAULTS = Object.freeze({
       acronym: "-",
       preserveTitleFormatting: false,
       scope: exports.PICKLIST.SCOPE.RESOURCE,
-      resource: exports.MODELS.FLEET,
+      resource: exports.MODELS.VEHICLE,
       field: "model",
       color: exports.COLORS.GRAY,
       order: 1,
@@ -247,7 +247,7 @@ exports.DEFAULTS = Object.freeze({
       acronym: "-",
       preserveTitleFormatting: false,
       scope: exports.PICKLIST.SCOPE.RESOURCE,
-      resource: exports.MODELS.FLEET,
+      resource: exports.MODELS.VEHICLE,
       field: "type",
       color: exports.COLORS.GRAY,
       order: 1,
@@ -261,7 +261,7 @@ exports.DEFAULTS = Object.freeze({
       acronym: "-",
       preserveTitleFormatting: false,
       scope: exports.PICKLIST.SCOPE.RESOURCE,
-      resource: exports.MODELS.FLEET,
+      resource: exports.MODELS.VEHICLE,
       field: "fuelType",
       color: exports.COLORS.GRAY,
       order: 1,
@@ -275,7 +275,7 @@ exports.DEFAULTS = Object.freeze({
       acronym: "-",
       preserveTitleFormatting: false,
       scope: exports.PICKLIST.SCOPE.RESOURCE,
-      resource: exports.MODELS.FLEET,
+      resource: exports.MODELS.VEHICLE,
       field: "transmission",
       color: exports.COLORS.GRAY,
       order: 1,
@@ -289,7 +289,7 @@ exports.DEFAULTS = Object.freeze({
       acronym: "-",
       preserveTitleFormatting: false,
       scope: exports.PICKLIST.SCOPE.RESOURCE,
-      resource: exports.MODELS.FLEET,
+      resource: exports.MODELS.VEHICLE,
       field: "condition",
       color: exports.COLORS.GRAY,
       order: 1,
@@ -430,8 +430,8 @@ exports.MESSAGE = Object.freeze({
       notFound: "Depreciation not found",
       titleExists: "Depreciation already exists",
     },
-    fleet: {
-      notFound: "Fleet not found",
+    vehicle: {
+      notFound: "Vehicle not found",
       licensePlateExists: "License plate already exists",
     },
     insurance: {
@@ -496,7 +496,7 @@ exports.SCOPE = Object.freeze({
 });
 
 exports.STATUSES = Object.freeze({
-  FLEET: { ASSIGNED: "assigned", IN_MAINTENANCE: "in_maintenance", IN_HOUSE: "in_house" },
+  VEHICLE: { ASSIGNED: "assigned", IN_MAINTENANCE: "in_maintenance", IN_HOUSE: "in_house" },
   INSURANCE: { ACTIVE: "active", EXPIRED: "expired", CANCELLED: "cancelled" },
   MAINTENANCE: { INITIATED: "initiated", COMPLETED: "completed" },
   WORKSPACE: { ACTIVE: "active", ARCHIVED: "archived", SUSPENDED: "suspended" },
@@ -578,11 +578,11 @@ exports.ROLES = Object.freeze({
 exports.PERMISSIONS = Object.freeze({
   WORKSPACE: {
     OWNER: {
-      FLEET: {
-        CREATE: "fleet:create",
-        READ: "fleet:read",
-        UPDATE: "fleet:update",
-        DELETE: "fleet:delete",
+      VEHICLE: {
+        CREATE: "vehicle:create",
+        READ: "vehicle:read",
+        UPDATE: "vehicle:update",
+        DELETE: "vehicle:delete",
       },
       INSURANCE: {
         CREATE: "insurance:create",
@@ -609,17 +609,15 @@ exports.PERMISSIONS = Object.freeze({
         DELETE: "taxation:delete",
       },
       WORKSPACE: {
-        CREATE: "workspace:create",
         READ: "workspace:read",
         UPDATE: "workspace:update",
-        DELETE: "workspace:delete",
       },
     },
     MEMBER: {
-      FLEET: {
-        CREATE: "fleet:create",
-        READ: "fleet:read",
-        UPDATE: "fleet:update",
+      VEHICLE: {
+        CREATE: "vehicle:create",
+        READ: "vehicle:read",
+        UPDATE: "vehicle:update",
       },
       INSURANCE: {
         CREATE: "insurance:create",
@@ -642,7 +640,6 @@ exports.PERMISSIONS = Object.freeze({
         UPDATE: "taxation:update",
       },
       WORKSPACE: {
-        CREATE: "workspace:create",
         READ: "workspace:read",
         UPDATE: "workspace:update",
       },

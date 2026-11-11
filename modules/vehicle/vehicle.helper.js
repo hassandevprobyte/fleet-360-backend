@@ -7,7 +7,7 @@ const picklistRepository = require("../picklist/picklist.repository");
 const validators = require("../../common/validators");
 
 // Config
-const { ENUMS } = require("../../common/constants");
+const { STATUSES } = require("../../common/constants");
 
 exports.getGroupListItemsMap = async (group, filters = {}) => {
   let groupItems;
@@ -28,14 +28,14 @@ exports.getGroupListItemsMap = async (group, filters = {}) => {
   return new Map(groupItems.map((group) => [group._id.toString(), group]));
 };
 
-exports.transformFleetsSummaryByGroup = async (fleetsSummary, primaryGroup, secondaryGroup) => {
-  const primaryGroupIds = fleetsSummary.primaryGroupWise
+exports.transformVehiclesSummaryByGroup = async (vehiclesSummary, primaryGroup, secondaryGroup) => {
+  const primaryGroupIds = vehiclesSummary.primaryGroupWise
     .map((group) => group?._id)
     .filter((id) => id && validators.isValidObjectId(id))
     .map(String);
   const primaryFilters = { _id: { $in: primaryGroupIds } };
 
-  const secondaryGroupIds = fleetsSummary.secondaryGroupWise
+  const secondaryGroupIds = vehiclesSummary.secondaryGroupWise
     .map((group) => group?._id)
     .filter((id) => id && validators.isValidObjectId(id))
     .map(String);
@@ -79,29 +79,29 @@ exports.transformFleetsSummaryByGroup = async (fleetsSummary, primaryGroup, seco
       .sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
   };
 
-  const primaryGroupWise = transformPrimaryGroupWise(fleetsSummary.primaryGroupWise);
-  const secondaryGroupWise = transformSecondaryGroupWise(fleetsSummary.secondaryGroupWise);
+  const primaryGroupWise = transformPrimaryGroupWise(vehiclesSummary.primaryGroupWise);
+  const secondaryGroupWise = transformSecondaryGroupWise(vehiclesSummary.secondaryGroupWise);
 
-  return { ...fleetsSummary, primaryGroupWise, secondaryGroupWise };
+  return { ...vehiclesSummary, primaryGroupWise, secondaryGroupWise };
 };
 
-exports.validateFleetStatus = (payload) => {
+exports.validateVehicleStatus = (payload) => {
   const { status, driverDetails } = payload;
 
   switch (status) {
-    case ENUMS.FLEET.STATUSES.IN_HOUSE:
+    case STATUSES.VEHICLE.IN_HOUSE:
       if (driverDetails) {
         throw Boom.badRequest("Driver details should not be provided when status is 'In House'");
       }
       break;
 
-    case ENUMS.FLEET.STATUSES.ASSIGNED:
+    case STATUSES.VEHICLE.ASSIGNED:
       if (!driverDetails) {
         throw Boom.badRequest("Driver details must be provided when status is 'Assigned'");
       }
       break;
 
-    case ENUMS.FLEET.STATUSES.IN_MAINTENANCE:
+    case STATUSES.VEHICLE.IN_MAINTENANCE:
       break;
 
     default:

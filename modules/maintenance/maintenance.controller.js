@@ -42,7 +42,8 @@ exports.getMaintenanceById = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createMaintenance = asyncHandler(async (req, res) => {
   const maintenancePayload = {
-    fleet: req.body.fleet,
+    workspace: req.context?.workspaceId,
+    vehicle: req.body.vehicle,
     type: req.body.type,
     status: req.body.status,
     priority: req.body.priority,
@@ -54,12 +55,12 @@ exports.createMaintenance = asyncHandler(async (req, res) => {
     cost: req.body.cost,
     checklist: req.body.checklist,
     notes: req.body.notes,
-    // createdBy: req.context?.user._id,
+    createdBy: req.context?.user._id,
   };
 
   const attachmentPayload = {
-    conditionBefore: req.files?.conditionBefore,
-    conditionAfter: req.files?.conditionAfter,
+    beforeImages: req.files?.beforeImages,
+    afterImages: req.files?.afterImages,
     uploadedBy: req.context?.user._id,
   };
 
@@ -74,7 +75,7 @@ exports.createMaintenance = asyncHandler(async (req, res) => {
 exports.updateMaintenance = asyncHandler(async (req, res) => {
   const maintenancePayload = {
     id: req.params.id,
-    fleet: req.body.fleet,
+    vehicle: req.body.vehicle,
     type: req.body.type,
     status: req.body.status,
     priority: req.body.priority,
@@ -86,11 +87,13 @@ exports.updateMaintenance = asyncHandler(async (req, res) => {
     cost: req.body.cost,
     checklist: req.body.checklist,
     notes: req.body.notes,
+    removedBeforeImages: req.body.removedBeforeImages,
+    removedAfterImages: req.body.removedAfterImages,
   };
 
   const attachmentPayload = {
-    conditionBefore: req.files?.conditionBefore,
-    conditionAfter: req.files?.conditionAfter,
+    beforeImages: req.files?.beforeImages,
+    afterImages: req.files?.afterImages,
     uploadedBy: req.context?.user._id,
   };
 

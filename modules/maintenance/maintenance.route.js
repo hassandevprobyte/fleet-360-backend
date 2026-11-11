@@ -10,8 +10,8 @@ const upload = uploadMiddleware({
   destination: "public/uploads/maintenance",
   uploadType: "fields",
   field: [
-    { name: "conditionBefore", maxCount: 10 },
-    { name: "conditionAfter", maxCount: 10 },
+    { name: "beforeImages", maxCount: 10 },
+    { name: "afterImages", maxCount: 10 },
   ],
 });
 

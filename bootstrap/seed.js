@@ -9,7 +9,7 @@ const { DEFAULTS, ROLES } = require("../common/constants");
 
 const SUPER_ADMIN = {
   title: "super admin",
-  email: "superadmin@fleet360.com",
+  email: "superadmin@vehicle360.com",
   defaultPassword: "Abcd1234",
   platformRole: ROLES.PLATFORM_ROLES.SUPER_ADMIN,
 };

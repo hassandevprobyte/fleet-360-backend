@@ -87,8 +87,8 @@ const schema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: Object.values(STATUSES.FLEET),
-      default: STATUSES.FLEET.IN_HOUSE,
+      enum: Object.values(STATUSES.VEHICLE),
+      default: STATUSES.VEHICLE.IN_HOUSE,
     },
     condition: {
       type: mongoose.Schema.Types.ObjectId,
@@ -120,4 +120,4 @@ const schema = new mongoose.Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.model(MODELS.FLEET, schema);
+module.exports = mongoose.model(MODELS.VEHICLE, schema);

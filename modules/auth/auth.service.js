@@ -19,9 +19,6 @@ const userValidation = require("../user/user.validation");
 // Environment Variables
 const { env } = require("../../config");
 
-// Utilities
-const resolveEffectiveAccess = require("../../common/utils/resolveEffectiveAccess");
-
 // Constants
 const { MESSAGE: message, PERMISSIONS, ROLES } = require("../../common/constants");
 
@@ -41,6 +38,7 @@ exports.signup = async (payload) => {
   validatedPayload.permissions = getPermissions(PERMISSIONS.WORKSPACE.OWNER);
 
   const user = await userService.createUser(validatedPayload);
+  await workspaceService.createWorkspace({ user: user._id });
 
   const otp = await otpService.createOtp({ key: `${user._id}:otp` });
 
@@ -95,8 +93,17 @@ exports.verifyEmail = async (payload) => {
 
   const updatePayload = { id: validatedPayload.id, isEmailVerified: true, emailVerifiedAt: new Date() };
 
-  await workspaceService.createWorkspace({ user: validatedPayload.id });
-  return userService.updateUser(updatePayload);
+  const user = await userService.updateUser(updatePayload);
+
+  const response = user.toObject ? user.toObject() : { ...user };
+
+  if (response.platformRole !== ROLES.PLATFORM_ROLES.SUPER_ADMIN) {
+    const workspace = await authValidation.throwErrorIfUserWorkspaceDoesNotExist(response._id);
+
+    response.slug = workspace.slug;
+  }
+
+  return response;
 };
 
 exports.resendOtp = async (payload) => {
@@ -154,6 +161,11 @@ exports.login = async (payload) => {
 
   const { _id, ...userPayload } = user.toObject();
   userPayload.id = user._id;
+
+  if (user.platformRole !== ROLES.PLATFORM_ROLES.SUPER_ADMIN) {
+    const workspace = await authValidation.throwErrorIfUserWorkspaceDoesNotExist(user._id);
+    userPayload.slug = workspace.slug;
+  }
 
   // Tokens
   const accessToken = `Bearer ${jwt.sign({ id: user._id }, env.JWT.ACCESS_TOKEN_SECRET, { expiresIn: "7d" })}`;
